@@ -1,0 +1,30 @@
+name: Relative arithmetic fixtures
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'benchmarks/export_relative_arithmetic.py'
+      - '.github/workflows/relative-arithmetic.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e .
+      - run: /home/sage/sage/sage -python benchmarks/export_relative_arithmetic.py --output arithmetic-fixtures
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relative-arithmetic-sage-10.6
+          path: arithmetic-fixtures/*.json
