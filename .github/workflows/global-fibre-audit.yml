@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
-      - run: /home/sage/sage/sage -python benchmarks/four_selmer_fibres.py --fixture ${{ matrix.fixture }} --verify --traceback-interval 120 > four-selmer-fibres-${{ matrix.fixture }}.jsonl
+      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py script benchmarks/four_selmer_fibres.py --fixture ${{ matrix.fixture }} --verify > four-selmer-fibres-${{ matrix.fixture }}.jsonl
       - run: /home/sage/sage/sage -python benchmarks/replay_fibres.py four-selmer-fibres-${{ matrix.fixture }}.jsonl > fibre-replay-${{ matrix.fixture }}.json
       - uses: actions/upload-artifact@v4
         if: always()

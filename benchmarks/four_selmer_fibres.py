@@ -4,7 +4,6 @@ Record complete exact equivalence geometry for replay without Sage. Parent
 Selmer completeness and local enumeration remain separate certified dependencies.
 """
 import argparse
-import faulthandler
 import sys
 import json
 import time
@@ -89,13 +88,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture',choices=['all',*FIXTURES],default='all')
     parser.add_argument('--verify',action='store_true')
-    parser.add_argument('--traceback-interval',type=int,default=0,
-                        help='emit diagnostic stacks during long stages; 0 disables')
     args=parser.parse_args()
-    if args.traceback_interval < 0:
-        parser.error('--traceback-interval must be nonnegative')
-    if args.traceback_interval:
-        faulthandler.dump_traceback_later(args.traceback_interval,repeat=True)
     from sage.all import EllipticCurve, pari
     from sage.env import SAGE_VERSION
     names=tuple(FIXTURES) if args.fixture=='all' else (args.fixture,)
@@ -144,8 +137,6 @@ def main():
             'verification_seconds':verification_seconds,**geometry_record(F)}
         print(json.dumps(record,sort_keys=True),flush=True)
         progress('completed')
-    if args.traceback_interval:
-        faulthandler.cancel_dump_traceback_later()
 
 
 if __name__=='__main__':
