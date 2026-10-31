@@ -8,7 +8,8 @@ The additive [quartic etale backend](etale-arithmetic.md) now supplies CRT maps
 and factorwise square classes for reducible quartics as v0.4 groundwork. It does
 not by itself imply descent completeness. The subsequent
 [two-quadratic step](two-quadratic-descent.md) integrates type `(2,2)` into the
-complete API; rational-root cases are still unsupported.
+complete API, followed by the [rational-root step](rational-root-descent.md).
+Both add the equivalence and local arguments absent from a norm fibre alone.
 
 ## What is computed
 
@@ -128,6 +129,8 @@ the quartic constructor does not silently reinterpret them.
 
 - Sage, [number-field `selmer_space`](https://doc.sagemath.org/html/en/reference/number_fields/sage/rings/number_field/number_field.html).
 - PARI/GP, [`ell2cover`](https://pari.math.u-bordeaux.fr/dochtml/html/Elliptic_curves.html#ell2cover).
-- T. Womack, [*Explicit Descent on Elliptic Curves*](https://johncremona.github.io/theses/womack.pdf), 2003.
-- T. Fisher, [*Some improvements to 4-descent on an elliptic curve*](https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf), 2008, Section 2.
+- T. Womack, *Explicit Descent on Elliptic Curves* (2003),
+  <https://johncremona.github.io/theses/womack.pdf>.
+- T. Fisher, *Some improvements to 4-descent on an elliptic curve* (2008),
+  <https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf>, Section 2.
 - SymPy, [primality testing](https://docs.sympy.org/latest/modules/ntheory.html#sympy.ntheory.primetest.isprime).

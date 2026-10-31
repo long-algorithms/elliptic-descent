@@ -7,8 +7,14 @@
   explicit orientation hypotheses and verified scalar-square transformations.
 - Add independent eclib Selmer-cardinality comparisons, locally obstructed
   sources, additional exact tests and type-2+2 benchmark artifacts.
-- Retain version 0.3.0 until all v0.4 factorization types are implemented.
-  Rational-root cases and full curve-level 4-Selmer assembly remain separate.
+- Extend relative descent to all rational-root patterns with an explicit
+  norm-minus-one involution, avoiding double-counted orientations.
+- Add exact rational-root/Jacobian identifications, inverse point maps and
+  verification of the canonical map against doubling.
+- Fix touching rational-root isolation intervals and extend independent eclib
+  count checks, regression tests and benchmark artifacts.
+- Retain version 0.3.0 pending the final v0.4 release/audit step. Full curve-level
+  4-Selmer assembly, degree-three input conversion and point search remain separate.
 
 ## 0.3.0 — Complete relative descent for irreducible quartics
 

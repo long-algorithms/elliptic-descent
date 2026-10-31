@@ -60,9 +60,9 @@ def test_relative_conditional_status():
     assert result.complete and not result.certified and result.assumptions
 
 
-def test_relative_reducible_is_not_an_empty_descent():
-    with pytest.raises(NotImplementedError):
-        relative_four_descent((4,0,-5,0,1))
+def test_relative_singular_is_not_an_empty_descent():
+    with pytest.raises(ValueError):
+        relative_four_descent((1,0,-2,0,1))
 
 
 def test_large_prime_certification_has_no_64_bit_cutoff():

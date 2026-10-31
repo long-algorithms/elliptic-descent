@@ -8,6 +8,7 @@ from .foundation import screen_norm_candidates
 from .local import padic_solubility, real_solubility, everywhere_local_solubility
 from .relative import relative_four_descent, RelativeDescentResult
 from .two_cover import QuarticTwoCover
+from .rational_root import RationalRootIdentification
 from .local_complete import padic_solubility_complete
 
 __all__ = [
@@ -17,6 +18,6 @@ __all__ = [
     "quartic_support", "screen_norm_candidates", "padic_solubility",
     "real_solubility", "everywhere_local_solubility",
     "relative_four_descent", "RelativeDescentResult", "QuarticTwoCover",
-    "padic_solubility_complete",
+    "padic_solubility_complete", "RationalRootIdentification",
 ]
 __version__ = "0.3.0"

@@ -1,8 +1,9 @@
 """Factorwise Sage square classes in a quartic etale algebra.
 
 Computes A(S,2), not the relative Selmer set or an orientation quotient.
-The existing irreducible-only sage_square_classes/relative_four_descent APIs
-are deliberately unchanged. See docs/etale-arithmetic.md for the contract.
+The relative-descent layer adds equivalences and local decisions separately.
+The legacy sage_square_classes API remains irreducible-only. See
+docs/etale-arithmetic.md for the arithmetic-only contract.
 """
 from dataclasses import dataclass
 from typing import Callable
@@ -132,7 +133,8 @@ def sage_etale_square_classes(f, support=None, *, proof=True):
     is unconditional even with proof=False. No global Sage proof flag is used.
 
     No rational-scalar, target-automorphism or orientation quotient is applied.
-    The existing complete relative-descent interface remains irreducible-only.
+    Use the separate relative_four_descent interface for local conditions and
+    factorization-dependent covering equivalences.
     """
     if type(proof) is not bool:
         raise TypeError("proof must be an explicit boolean")

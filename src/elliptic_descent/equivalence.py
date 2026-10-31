@@ -1,8 +1,9 @@
 """Fixed-target scalar-square equivalences and supported orientation policies.
 
 For degrees (4) and (2,2), a scalar-square stabilizer cannot reverse the norm
-witness. Rational-root patterns need a different rule and are rejected here.
-See docs/two-quadratic-descent.md for the proof and the precise quotient.
+witness. With a rational root, a linear-factor sign change identifies the two
+orientations. Its CRT multiplier is retained as exact evidence. See
+docs/rational-root-descent.md for the proof and the precise quotient.
 """
 from dataclasses import dataclass
 from typing import Sequence
@@ -21,6 +22,7 @@ class OrientationCertificate:
     or the completeness of any candidate enumeration.
     """
     factors: tuple
+    reversing_multiplier: tuple | None = None
 
     @property
     def factorization_type(self):
@@ -28,27 +30,51 @@ class OrientationCertificate:
 
     @property
     def multiplicity(self):
-        if self.factorization_type not in ((4,), (2, 2)):
-            raise NotImplementedError("orientation rule requires type 4 or 2+2")
-        return 2
+        if self.factorization_type in ((4,), (2, 2)):
+            return 2
+        if self.factorization_type in ((3, 1), (2, 1, 1), (1, 1, 1, 1)):
+            return 1
+        raise NotImplementedError("expected a squarefree quartic factorization")
 
     def verify(self, f):
         try:
             algebra = EtaleQuarticAlgebra(f)
-            return (algebra.factors == self.factors
-                    and self.factorization_type in ((4,), (2, 2)))
-        except (TypeError, ValueError):
+            if algebra.factors != self.factors:
+                return False
+            if self.multiplicity == 2:
+                return self.reversing_multiplier is None
+            v = _four(self.reversing_multiplier, "orientation multiplier")
+            return (algebra.multiply(v, v) == algebra.one
+                    and algebra.norm(v) == -1)
+        except (TypeError, ValueError, NotImplementedError):
             return False
+
+    def identification(self, model):
+        """Witness identifying (xi,r) with (xi,-r), or None if inequivalent.
+
+        Call witness.verify(model, replace(model, norm_witness=-r)) to audit
+        the actual polynomial maps. This is not an identification of the
+        target's points: it is an isomorphism between two diagrams over C.
+        """
+        if not self.verify(model.f):
+            raise ValueError("orientation evidence does not match the source quartic")
+        if self.multiplicity == 2:
+            return None
+        return ScalarSquareEquivalence(sp.S.One, self.reversing_multiplier)
 
 
 def orientation_certificate(f) -> OrientationCertificate:
     algebra = f if isinstance(f, EtaleQuarticAlgebra) else EtaleQuarticAlgebra(f)
-    if algebra.factorization_type not in ((4,), (2, 2)):
-        raise NotImplementedError(
-            "complete relative descent currently supports irreducible quartics "
-            "and products of two irreducible quadratics; rational-root cases "
-            "require different covering-equivalence bookkeeping")
-    return OrientationCertificate(algebra.factors)
+    if 1 not in algebra.degrees:
+        return OrientationCertificate(algebra.factors)
+    # Flip only one rational factor. The multiplier has square 1 and norm -1.
+    # Keep factors labelled, including separately embedded isomorphic fields.
+    index = algebra.degrees.index(1)
+    v = algebra.embed_factor_unit(index, (-1,))
+    result = OrientationCertificate(algebra.factors, v)
+    if not result.verify(algebra.f):
+        raise ArithmeticError("orientation-reversing CRT witness failed")
+    return result
 
 
 @dataclass(frozen=True)
