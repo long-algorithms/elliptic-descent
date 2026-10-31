@@ -18,7 +18,8 @@ FIXTURES = {
     "two_imaginary_fields": (2, 0, 3, 0, 1),
     "mixed_signature": (-6, 0, 1, 0, 1),
     "real_obstruction": (-2, 0, -3, 0, -1),
-    "finite_obstruction": (6, 0, 8, 0, 2),
+    "affine_positive": (6, 0, 8, 0, 2),
+    "two_adic_obstruction": (6, 0, 9, 0, 3),
 }
 
 

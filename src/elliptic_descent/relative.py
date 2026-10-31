@@ -1,4 +1,4 @@
-"""Relative 4-descent for a smooth irreducible quartic over Q.
+"""Relative 4-descent for quartics of type 4 or 2+2 over Q.
 
 The target is a fixed quartic 2-cover, with its canonical Jacobian map.
 Equivalence fixes the target C pointwise. Both orientations of D -> C are
@@ -13,6 +13,9 @@ import sympy as sp
 
 from .arithmetic import nonnegative_integer
 from .backends.sage import sage_square_classes
+from .backends.sage_etale import sage_etale_square_classes
+from .etale import EtaleQuarticAlgebra
+from .equivalence import OrientationCertificate, orientation_certificate
 from .geometry import _mul, _norm, _sqrt_rational, construct_four_cover
 from .local_complete import complete_local_screen
 from .quotient import quotient_fibre
@@ -38,6 +41,11 @@ class RelativeDescentResult:
     assumptions: tuple
     support: tuple
     timings: tuple
+    orientation: OrientationCertificate
+
+    @property
+    def factorization_type(self):
+        return self.orientation.factorization_type
 
     @property
     def enumeration_complete(self):
@@ -53,7 +61,8 @@ class RelativeDescentResult:
 
     @property
     def certified(self):
-        return self.complete and self.arithmetic_proof == ProofStatus.CERTIFIED and not self.assumptions
+        return (self.complete and self.arithmetic_proof == ProofStatus.CERTIFIED
+                and not self.assumptions and self.orientation.verify(self.source.f))
 
     @property
     def unoriented_coverings(self):
@@ -64,9 +73,12 @@ class RelativeDescentResult:
     def coverings(self):
         """All maps to the fixed C, including both inequivalent orientations.
 
-        Irreducibility implies Q[t]/f is a field. An element v with v^2 in Q
-        has positive norm, so no scalar-square stabilizer reverses orientation.
+        For a quartic field or a product of two quadratic fields, v^2=d in Q
+        implies N(v)=d^2. Thus c*v^2=1 implies c^2*N(v)=1: a stabilizer cannot
+        reverse r. This rule is deliberately not used for rational-root types.
         """
+        if not self.orientation.verify(self.source.f):
+            raise ValueError("orientation certificate does not match the supported source")
         return tuple(oriented for model in self.unoriented_coverings
                      for oriented in (model, replace(model, norm_witness=-model.norm_witness)))
 
@@ -80,7 +92,8 @@ class RelativeDescentResult:
         Arithmetic completeness is a trusted certified Sage dependency. False
         can mean the independent local verifier's resource budget was too small.
         """
-        if not self.complete or not self.source.check_map():
+        if (not self.complete or not self.source.check_map()
+                or not self.orientation.verify(self.source.f)):
             return False
         for candidate in self.candidates:
             D = candidate.model
@@ -101,7 +114,8 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
     f: five rational coefficients, in ascending order, or QuarticTwoCover.
     No artificial limits are applied by default. Finite limits give partial
     results and NEVER turn unresolved candidates into local obstructions.
-    Reducible/singular quartics are rejected rather than labelled complete.
+    Type 4 and type 2+2 are supported. Rational-root/singular inputs are
+    rejected rather than labelled complete.
 
     This does not compute Sel^(4)(E) or a Mordell--Weil rank. The fixed
     source may itself be locally insoluble; an empty result alone makes no
@@ -114,10 +128,14 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
         if value is not None:
             nonnegative_integer(value, name)
     source = f if isinstance(f, QuarticTwoCover) else QuarticTwoCover(tuple(f))
+    algebra = EtaleQuarticAlgebra(source.f)
+    orientation = orientation_certificate(algebra)
     if not source.check_map():
         raise ArithmeticError("canonical quartic map verification failed")
     start = perf_counter()
-    context = sage_square_classes(source.f, proof=proof)
+    context = (sage_square_classes(source.f, proof=proof)
+               if algebra.factorization_type == (4,)
+               else sage_etale_square_classes(algebra, proof=proof))
     space = context.space
     fibre = space.norm_fibre()
     # Include the sign class: omitting -1 would retain duplicate models.
@@ -147,4 +165,4 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
                                  scalar_basis, len(fibre.basis), space.arithmetic_proof,
                                  space.assumptions, space.support,
                                  (("arithmetic_seconds", arithmetic_seconds),
-                                  ("construction_and_local_seconds", local_seconds)))
+                                  ("construction_and_local_seconds", local_seconds)), orientation)
