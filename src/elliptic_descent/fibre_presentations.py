@@ -49,12 +49,19 @@ def _score(cover):
     return len(support), bits, support
 
 
+def _prefer(candidate_score, current_score):
+    """Only fewer support primes justify replacing the reference presentation."""
+    return candidate_score[0] < current_score[0]
+
+
 def fibre_representative(selmer, coordinates, torsion):
     """Select among fully verified presentations; never remove a class or a prime.
 
     The full conservative support is recomputed for each candidate presentation.
     Comparing its size only selects which isomorphic quartic to descend. No
-    prime is omitted from the eventual relative-descent support.
+    prime is omitted from the eventual relative-descent support. Equal-size
+    support is NOT a reason to switch: smaller coefficients alone can hide
+    much worse local reduction and cause an enormous lifting tree.
     """
     best = selmer.quartic_cover(coordinates)
     if not coordinates or selmer.arithmetic.algebra.degrees != (1, 1, 1):
@@ -70,6 +77,6 @@ def fibre_representative(selmer, coordinates, torsion):
         if candidate.ambient_label != best.ambient_label or candidate.target != best.target:
             raise ArithmeticError('presentation selection changed the labelled covering')
         candidate_score = _score(candidate)
-        if candidate_score < score:
+        if _prefer(candidate_score, score):
             best, score = candidate, candidate_score
     return best
