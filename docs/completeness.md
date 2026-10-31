@@ -1,9 +1,10 @@
 # What “complete 4-descent” means
 
-This is a specification and release-gate checklist, **not a claim about the
-current implementation**. In v0.1.x only the supplied-square-class geometric
-constructor and its exact checks are implemented. None of the Selmer,
-local-solubility, equivalence, or exhaustive-enumeration stages exists yet.
+This is a specification and release-gate checklist. **v0.2 implements the
+arithmetic/local foundation, not complete relative 4-descent.** The geometric
+constructor, finite-support norm fibres, Sage/PARI adapters and bounded exact
+local tests are implemented. Complete relative Selmer parametrization and
+covering-equivalence accounting remain v0.3 work. See [v0.2 acceptance](v0.2.md).
 
 ## Objects, levels, and equivalence
 
@@ -107,10 +108,10 @@ Mordell–Weil basis, or triviality of `Sha(E)[4]`.
 
 ## Release gates
 
-- **v0.1.x — geometric baseline (current):** quartic algebra and norm witness,
+- **v0.1.x — geometric baseline (completed):** quartic algebra and norm witness,
   quadric equations, map identity, exact model-smoothness and basepoint checks,
   negative inputs, preliminary timing harness. Not complete descent.
-- **v0.2 — arithmetic and local foundation:** finitely supported square classes
+- **v0.2 — arithmetic and local foundation (current):** finitely supported square classes
   and norm constraints, local solubility with `unknown` outcomes, Sage/PARI
   adapter, and explicit arithmetic proof assumptions. No completeness claim
   outside families with a documented proven bound.
@@ -151,11 +152,13 @@ regressions, and a documented supported-input domain.
    Never compare a partial result with an unconditional complete one as if
    they represented the same task.
 
-In v0.1.x the performance runner measures geometry only. Its `--verify` flag
+`benchmarks/geometry.py` retains the v0.1.x geometric reference path. Its `--verify` flag
 checks the algebra, map identity, smoothness, and basepoint freeness
 separately from the construction timing; none of these certify local
-solubility or complete 4-descent. Later versions should retain the slow exact reference path so every
-optimized implementation can be differential-tested.
+solubility or complete 4-descent. `benchmarks/foundation.py` adds arithmetic,
+local screening and certificate verification in v0.2. Both preserve scope and
+proof metadata. Future optimized implementations must be differential-tested
+against these exact reference paths.
 
 ## References
 
