@@ -38,11 +38,13 @@ jobs:
       matrix:
         include:
           - group: core
-            pytest_args: --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py
+            pytest_args: --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py --ignore=tests/test_sage_four_selmer_fibres.py
           - group: pairing
             pytest_args: tests/test_sage_cassels_tate.py
           - group: radical
             pytest_args: tests/test_sage_pairing_radical.py
+          - group: fibres
+            pytest_args: tests/test_sage_four_selmer_fibres.py
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root
