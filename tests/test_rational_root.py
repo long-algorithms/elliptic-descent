@@ -1,6 +1,5 @@
 """Exact rational-root identifications, stabilizers and real-isolation regressions."""
 from dataclasses import replace
-from itertools import product
 
 import pytest
 import sympy as sp
@@ -16,6 +15,8 @@ from elliptic_descent.two_cover import X, Y, Z
 FIXTURES = (
     (0, 1, -1, 0, 1),          # rational root zero, cubic field
     (-3, 4, -1, -3, 1),        # translated rational root
+    (0, 1, -3, 0, 1),          # three real conjugates in the cubic factor
+    (-1, 0, 0, 0, 1),          # imaginary quadratic component
     (2, 0, -3, 0, 1),          # two rational roots and a quadratic field
     (4, 0, -5, 0, 1),          # split, Jacobian has rational 4-torsion
     (0, -1, 1, 0, -1),         # negative leading coefficient
@@ -157,3 +158,25 @@ def test_invalid_identification_inputs_and_points():
             identification.from_jacobian(P)
     with pytest.raises(TypeError):
         identification.from_jacobian((8.0,12))
+
+
+def test_seeded_rational_roots_preserve_marking_under_nonmonic_presentations():
+    from random import Random
+    rng = Random(20261031)
+    t = sp.Symbol('t')
+    checked = 0
+    for _ in range(12):
+        root = sp.Rational(rng.randrange(-3, 4), rng.randrange(1, 4))
+        cubic = t**3+sum(rng.randrange(-3, 4)*t**i for i in range(3))
+        scale = sp.Rational(rng.choice((-2, -1, 1, 2)), rng.randrange(1, 4))
+        polynomial = sp.Poly(scale*(t-root)*cubic, t, domain=sp.QQ)
+        if polynomial.discriminant() == 0:
+            continue
+        f = tuple(polynomial.nth(i) for i in range(5))
+        identification = RationalRootIdentification(f, root)
+        assert identification.check_marked_map()
+        assert identification.to_jacobian((root, 0, 1)) is None
+        certificate = orientation_certificate(f)
+        assert certificate.verify(f) and certificate.multiplicity == 1
+        checked += 1
+    assert checked >= 8

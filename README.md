@@ -2,16 +2,16 @@
 
 Exact, testable algorithms for elliptic-curve descent over the rational numbers.
 
-**Complete relative 4-descent is available for smooth quartics of type 4 or 2+2.**
-The package version remains **v0.3.0**; the two-quadratic extension is
-the second v0.4 development step, not the completed v0.4 release.
+**Complete relative 4-descent now supports all squarefree degree-four quartics over Q.**
+The package version remains **v0.3.0**; the rational-root extension completes
+the third v0.4 development step. The separate release/audit step is still pending.
 Given a quartic 2-covering with its canonical map to its Jacobian, it enumerates
 all everywhere locally soluble lifts, with explicit quadric equations and maps,
 up to the fixed-target equivalence specified below. Complete mode has no
 artificial candidate or local-search cutoff.
 
 This is **not** a full curve-level 4-Selmer-group computation, a Mordell–Weil
-rank algorithm, or a performance match for Magma. Rational-root descent cases,
+rank algorithm, or a performance match for Magma. Degree-three input conversion,
 full Selmer-group assembly, minimization/reduction, and practical point search
 remain separate milestones.
 
@@ -46,15 +46,18 @@ print(result.source.compose(D))            # Degree-16 map D -> Jacobian
 
 ### Precisely what is counted
 
-`result.coverings` retains **both signs of the map to the fixed quartic**.
-Isomorphisms must commute with the identity of that quartic.
-`result.unoriented_coverings` additionally identifies the target involution
-`(X:Y:Z) -> (X:-Y:Z)`. For either supported factorization type these counts
-differ by a factor of two. The [two-quadratic proof and regression
-tests](docs/two-quadratic-descent.md) explain why this does not extend to
-rational-root cases. Neither list silently quotients by other target automorphisms or
-rational torsion translations. A quartic with merely the same Jacobian is not
-a substitute for the specified target.
+`result.coverings` returns one representative per fixed-target covering class.
+For types `4` and `2+2`, the two map orientations are inequivalent and both are
+retained. When there is a rational root, an exact norm-minus-one CRT involution
+identifies those orientations, so only one is returned. The witness is exposed
+through `result.orientation.identification(model)`.
+
+`result.unoriented_coverings` is the additional quotient by the target involution
+`(X:Y:Z) -> (X:-Y:Z)`. Its size is half that of `coverings` for types `4` and
+`2+2`, and equal for the three rational-root patterns. No other target
+automorphisms, rational torsion translations or factor permutations are
+silently quotiented. See [rational-root descent](docs/rational-root-descent.md)
+for the exact equivalence and marked Jacobian identification.
 
 Inputs are five exact rational coefficients or a `QuarticTwoCover` object.
 The canonical quartic-to-Jacobian map is part of that object. An independently
@@ -78,7 +81,8 @@ need not itself be locally soluble, so interpreting an empty result in terms
 of Sha requires that additional information.
 
 `proof=True` explicitly requests Sage's unconditional number-field arithmetic.
-`proof=False` retains a GRH assumption and cannot return `certified=True`.
+`proof=False` retains a GRH assumption for nonrational field factors. Fully
+split rational arithmetic has no class-group dependency and can remain certified.
 `verify_evidence()` checks exact geometric/local evidence, not a second
 independent class-group computation. Its separate verification budget may be
 insufficient; failure to verify is not a proof of solubility.
@@ -89,7 +93,7 @@ insufficient; failure to verify is not a proof of solubility.
 |---|---|
 | Geometry | Exact norm-pair construction, maps, independent norm-form and polynomial audits |
 | Arithmetic | Sage field/product square classes, class-group contribution, norm fibre, diagonal scalar quotient |
-| Equivalence | Fixed-target norm-pair equivalence and both orientations; scalar dependencies retained |
+| Equivalence | Fixed-target classes, with exact orientation-identification witnesses for rational-root types |
 | Real place | Complete exact sign test using isolated roots, including zero, two, or four real roots |
 | Finite places | Terminating smooth-model search, exact eliminants and linear lifts, verified integral model changes |
 | Certificates | Hensel witnesses, independent modular obstruction checks, real signs and model transformations |
@@ -97,8 +101,8 @@ insufficient; failure to verify is not a proof of solubility.
 
 The earlier bounded routines remain available as independent reference paths.
 They are not silently relabelled complete. The geometric constructor handles
-squarefree reducible quartics, but the **relative descent** currently supports
-only irreducible quartics and products of two irreducible quadratics. Large-prime
+all squarefree degree-four quartics, and **relative descent** now supports
+all five factorization patterns. Degree-three and singular inputs are rejected. Large-prime
 certification uses Sage/PARI rather than accepting probable primes. Runtime and memory can still be substantial on difficult inputs.
 
 ## Tests and benchmarks
@@ -113,6 +117,7 @@ python benchmarks/foundation.py --repeats 3 --verify
 # Complete end-to-end benchmark corpus, including independently checked obstructions.
 sage -python benchmarks/relative.py --fixture all --verify --repeats 3
 sage -python benchmarks/two_quadratic.py --verify --repeats 3
+sage -python benchmarks/rational_root.py --verify --repeats 3
 ```
 
 CI tests Python 3.10 and 3.13 plus a digest-pinned Sage 10.6 environment.
@@ -126,6 +131,7 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 
 - [Relative descent: contract and completeness argument](docs/relative-descent.md)
 - [Two-quadratic descent: equivalence and independent checks](docs/two-quadratic-descent.md)
+- [Rational-root descent and marked Jacobian maps](docs/rational-root-descent.md)
 - [v0.3 acceptance and regression corpus](docs/v0.3.md)
 - [Construction and conventions](docs/algorithm.md)
 - [Finite-support arithmetic](docs/arithmetic.md)
@@ -133,9 +139,9 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 - [Full project completeness specification](docs/completeness.md)
 - [Changelog](CHANGELOG.md)
 
-The next milestone is v0.4, covering every nonsingular quartic factorization
-type; rational-root cases remain after the completed two-quadratic step.
-The full 4-Selmer group and its group operations are v0.5 work.
+All five degree-four factorization patterns are implemented. The next planned
+step is the final v0.4 certification/release audit. The full curve-level
+4-Selmer group and its group operations remain v0.5 work.
 
 ## References
 

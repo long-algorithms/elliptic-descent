@@ -17,6 +17,8 @@ from elliptic_descent.rational_root import RationalRootIdentification
 FIXTURES = (
     ('cubic_root_zero', (0,1,-1,0,1), (3,1)),
     ('cubic_root_three', (-3,4,-1,-3,1), (3,1)),
+    ('cubic_all_real', (0,1,-3,0,1), (3,1)),
+    ('imaginary_quadratic', (-1,0,0,0,1), (2,1,1)),
     ('quadratic_two_roots', (2,0,-3,0,1), (2,1,1)),
     ('split_four_torsion', (4,0,-5,0,1), (1,1,1,1)),
     ('negative_cubic', (0,-1,1,0,-1), (3,1)),

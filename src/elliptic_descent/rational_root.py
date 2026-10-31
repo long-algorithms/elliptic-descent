@@ -130,7 +130,7 @@ class RationalRootIdentification:
         px, py, pz = (q.subs(Z, 1) for q in self.source.map_weighted)
         if not (vanishes(doubled_x-px/pz**2) and vanishes(doubled_y-py/pz**3)):
             return False
-        # The inverse polynomial map has no basepoint: u=0 makes X=A!=0.
+        # The inverse polynomial map has no basepoint: Z=0 makes X=A!=0.
         inverse = {X: self.root*(u-self.shift)+a, Y: -a*v, Z: u-self.shift}
         residual = sp.expand((Y*Y-F).subs(inverse, simultaneous=True))
         target_ideal = sp.groebner((v*v-u**3-a2*u*u-a4*u-a6,), v, u, domain=sp.QQ)
