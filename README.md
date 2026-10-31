@@ -132,15 +132,36 @@ type. The full 4-Selmer group and its group operations are v0.5 work.
 
 ## References
 
-The main sources are Womack's
-[*Explicit Descent on Elliptic Curves*](https://johncremona.github.io/theses/womack.pdf)
-(2003), Fisher's
-[*Some improvements to 4-descent*](https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf)
-(2008), Cremona–Fisher–Stoll's
-[minimization and reduction algorithms](https://arxiv.org/abs/0908.1741)
-(2010), and Fisher–Sills's
-[local-solubility and height algorithms](https://arxiv.org/abs/1103.4944)
-(2011). Specific theorems and implementation conventions are cited in the docs.
+These are the **core sources for our 4-descent implementation**, rather than a
+comprehensive literature survey. See the separate
+[**descent-algorithms bibliography**](docs/descent-references.md) for 2-, 3-,
+5-, 6-, 7-, 8-, 9- and 12-descent, isogeny descents, arithmetic and software.
+The proof and coordinate conventions are in
+[the relative-descent documentation](docs/relative-descent.md).
+
+- **S. Siksek (1995)**,
+  [*Descents on Curves of Genus 1* (PhD thesis)](https://samirsiksek.github.io/siksek.github.io/papers/phdnew.pdf).
+  Geometric foundations of genus-one higher descent.
+- **J. R. Merriman, S. Siksek and N. P. Smart (1996)**,
+  [*Explicit 4-descents on an elliptic curve*](https://samirsiksek.github.io/siksek.github.io/papers/fourdesc.pdf),
+  *Acta Arithmetica* **77**, 385–404. Original 4-descent construction.
+- **T. Womack (2003)**,
+  [*Explicit Descent on Elliptic Curves* (PhD thesis)](https://johncremona.github.io/theses/womack.pdf).
+  Detailed quartic-algebra constructions and algorithms.
+- **E. F. Schaefer and M. Stoll (2004)**,
+  [*How to do a p-descent on an elliptic curve*](https://mathe2.uni-bayreuth.de/stoll/papers/p-descent-long.pdf),
+  *Trans. Amer. Math. Soc.* **356**, 1209–1231.
+  Selmer groups, finite support, units and class groups.
+- **T. A. Fisher (2008)**,
+  [*Some improvements to 4-descent on an elliptic curve*](https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf),
+  *ANTS VIII*, LNCS **5011**, 125–138. Less redundant global arithmetic.
+- **J. E. Cremona, T. A. Fisher and M. Stoll (2010)**,
+  [*Minimisation and reduction of 2-, 3- and 4-coverings of elliptic curves*](https://arxiv.org/abs/0908.1741),
+  *Algebra & Number Theory* **4**, 763–820. Small integral models.
+- **T. A. Fisher and G. F. Sills (2012)**,
+  [*Local solubility and height bounds for coverings of elliptic curves*](https://arxiv.org/abs/1103.4944),
+  *Math. Comp.* **81**, 1635–1662.
+  Local conditions, maps and point searches (2011 preprint).
 
 ## License
 
