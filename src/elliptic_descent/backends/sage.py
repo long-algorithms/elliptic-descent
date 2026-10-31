@@ -26,7 +26,8 @@ def number_field_square_classes(K, support, *, proof=True):
         raise TypeError("proof must be an explicit boolean")
     support = tuple(sorted(set(prime(p) for p in support)))
     S = [P for p in support for P in K.primes_above(p)]
-    V, generators, from_V, to_V = K.selmer_space(S, 2, proof=proof)
+    # Plain .py modules do not use Sage's integer preparser.
+    V, generators, from_V, to_V = K.selmer_space(S, _sage().ZZ(2), proof=proof)
     if len(generators) != V.dimension():
         raise ArithmeticError("backend returned an inconsistent square-class basis")
     for g, e in zip(generators, V.basis()):

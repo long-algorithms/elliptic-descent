@@ -1,80 +1,124 @@
 # elliptic-descent
 
-Exact, testable computational tools for elliptic-curve descent, beginning with
-explicit 4-descent over the rational numbers. The long-term goal is certified
-and efficient 4-descent and reusable algorithms for higher descent, with Sage,
-PARI/GP, and eclib interoperability.
+Exact, testable algorithms for elliptic-curve descent, beginning with explicit
+4-descent over the rational numbers.
 
-**Status: v0.1.0 is an exact geometric prototype, not an implementation of
-complete 4-descent.** Given a squarefree quartic `f` and an element `xi` of
-`Q[t]/(f)` satisfying a square-norm condition, it computes two quadrics in four
-variables and an explicit rational map to `y^2=f(x)`. It does **not** compute
-Selmer groups, locally soluble coverings, rank bounds, or Mordell–Weil points.
+**v0.2.0: arithmetic and local-solubility foundations.** The package constructs
+candidate 4-coverings, computes finite-support square classes through Sage,
+solves their norm conditions, and screens the resulting models locally with
+checkable certificates. It does **not yet implement complete relative
+4-descent**, compute the full 4-Selmer group, or determine Mordell–Weil ranks.
 
-## Install and run
+## Install and test
 
-Requires Python 3.10+ and SymPy; no Magma or Sage installation is necessary for
-this first reference kernel. Sage/PARI adapters are planned. This small
-backend-neutral implementation is deliberately optimized for auditability,
-not speed.
+The geometry, bit-vector arithmetic, and local routines require Python 3.10+
+and SymPy. Number-field square classes and PARI imports additionally require
+SageMath. All library files use ordinary Python syntax.
 
 ```sh
 python -m pip install -e '.[test]'
 python -m pytest -q
-python benchmarks/geometry.py --repeats 5 --verify
+python benchmarks/geometry.py --repeats 3 --verify
+python benchmarks/foundation.py --repeats 3 --verify
 ```
+
+For the complete suite, including the genuine Sage/PARI integration tests:
+
+```sh
+sage -pip install -e '.[test]'
+ELLIPTIC_DESCENT_REQUIRE_SAGE=1 sage -python -m pytest -q
+sage -python benchmarks/foundation.py --sage --repeats 1 --verify
+```
+
+The Python-only suite explicitly skips the Sage module. The dedicated CI job
+requires Sage and cannot silently skip these tests. CI stores benchmark JSONL
+artifacts; experiments and proof details belong in `docs/`, not the root README.
+
+## Construct and check a covering
 
 ```python
-from elliptic_descent import construct_four_cover
+from elliptic_descent import construct_four_cover, everywhere_local_solubility
 
-# f(t)=t^4-t+1, xi=-theta, Norm(xi)=1
+# Ascending coefficients: f(t)=t^4-t+1, xi=-theta.
 D = construct_four_cover((1, -1, 0, 0, 1), (0, -1, 0, 0))
-print(D.quadrics)       # homogeneous quadrics q2, q3
-print(D.map_xyz)        # (X,Y,Z) for the quartic model
-assert D.check_algebra()
-assert D.evaluate((1, 0, 0, 0))[0] == (0, 0)
+assert D.check_algebra() and D.check_map_identity()
+assert D.check_smoothness() and D.check_map_basepoint_free()
+local = everywhere_local_solubility(D, point=(1, 0, 0, 0))
+assert local.status.value == 'soluble'
+assert all(report.verify(D) for report in local.reports)
 ```
 
-See [construction and conventions](docs/algorithm.md) for the norm identity,
-map, limitations, and references. The project now has a
-[completeness specification and release gates](docs/completeness.md), including
-explicit distinction between partial, conditional, and certified results.
-The `status.py` bookkeeping types reserve these distinctions for future descent
-backends; they do **not** calculate or certify Selmer groups. The geometric
-prototype additionally provides optional exact `check_smoothness()` and
-`check_map_basepoint_free()` checks over an algebraic closure.
+## Enumerate a finite norm fibre and screen it
 
-## Development plan
+Run this example with `sage -python`:
 
-1. **v0.1.x** — exact quartic-algebra geometry, candidate quadrics, map
-   identities, projective smoothness/basepoint checks, negative tests,
-   status bookkeeping, and JSON microbenchmarks (current prototype).
-2. **v0.2** — square-class enumeration over finite supports, norm-space
-   computation, certified class-group/units dependencies, PARI/Sage adapters,
-   and exact local solubility with honest unknown outcomes.
-3. **v0.3** — complete certified relative 4-descent for irreducible quartics.
-4. **v0.4** — all nonsingular quartic factorization types.
-5. **v0.5** — full curve-level 4-Selmer group, maps, and Cassels pairing.
-6. **v1.0** — practical minimization, reduction, point search, and benchmarks.
+```python
+from elliptic_descent.backends.sage import sage_square_classes
+from elliptic_descent import screen_norm_candidates
 
-See the [formal release gates](docs/completeness.md) for precise acceptance
-criteria and required independent tests. These milestones are not timelines.
+context = sage_square_classes((1, -1, 0, 0, 1), proof=True)
+result = screen_norm_candidates(context.space, limit=128,
+                                max_depth=6, max_nodes=100_000)
+print(result.arithmetic.total_count)
+print(result.arithmetic.norm_fibre_exhausted)
+print(len(result.retained), len(result.unresolved))
+assert not result.relative_descent_complete
+```
 
-Correctness, local solubility, completeness, and arithmetic proof assumptions
-will be represented separately. Benchmark fixtures will distinguish timings of
-geometry, global arithmetic, local filtering, and point searches.
+The last assertion is intentional: exhausting a norm fibre is **not** the same
+as exhausting the relative Selmer set with the correct equivalences and
+orientation data. A smaller user-supplied support is allowed for experiments
+but does not inherit a descent-completeness claim.
+
+## Implemented scope
+
+| Component | v0.2 capability |
+|---|---|
+| Geometry | Exact quartic-algebra construction, maps, smoothness/basepoint checks |
+| Arithmetic | Sage `K(S,2)`, including class-group 2-torsion; affine norm equations; witnesses |
+| PARI | Import `ell2cover` basis models/maps; independently check map identities |
+| Finite places | Bounded exhaustive residue lifting, strong Hensel witnesses, modular obstructions |
+| Real place | Rational-point witnesses and definite-pencil obstructions; otherwise `unknown` |
+| All other primes | A conservative good-reduction bound for regular squarefree pencils |
+| Verification | Independent certificate checks, negative tests, Sage integration, JSONL benchmarks |
+
+The number-field adapter currently accepts irreducible quartics. The geometric
+kernel also handles squarefree reducible quartics. Local searches are bounded;
+resource exhaustion is `unknown`, never insolubility. The reference prime
+validation/factorization layer supports prime factors below `2**64`.
+
+`proof=True` explicitly requests Sage's certified arithmetic. `proof=False`
+retains a GRH assumption. Hand-constructed status objects are bookkeeping,
+not mathematical certificates. Returned local witnesses can be checked using
+`report.verify(model)` independently of the class-group assumptions.
+
+## Documentation and development
+
+- [Construction and conventions](docs/algorithm.md)
+- [Square classes, finite support, and proof dependencies](docs/arithmetic.md)
+- [Local algorithms and certificate verification](docs/local.md)
+- [Completeness specification and release gates](docs/completeness.md)
+- [v0.2 acceptance and reproducibility checklist](docs/v0.2.md)
+- [Changelog](CHANGELOG.md)
+
+The next mathematical milestone is **v0.3: complete certified relative
+4-descent for irreducible quartics**. Later milestones add all factorization
+types, curve-level 4-Selmer groups, and practical minimization/reduction/search.
+Performance work retains the slow exact reference paths for differential tests.
 
 ## References
 
-- Womack, *Explicit Descent on Elliptic Curves* (2003),
-  https://johncremona.github.io/theses/womack.pdf
-- Fisher, *Some improvements to 4-descent on an elliptic curve* (2008),
-  https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf
-- Cremona–Fisher–Stoll, *Minimisation and reduction of 2-, 3- and 4-coverings*
-  (2010), https://arxiv.org/abs/0908.1741
-- Fisher–Sills, *Local solubility and height bounds for coverings* (2011),
-  https://arxiv.org/abs/1103.4944
+The main mathematical sources are Womack's
+[*Explicit Descent on Elliptic Curves*](https://johncremona.github.io/theses/womack.pdf)
+(2003), Fisher's
+[*Some improvements to 4-descent*](https://www.dpmms.cam.ac.uk/~taf1000/papers/fourdesc.pdf)
+(2008), Cremona–Fisher–Stoll's
+[minimization and reduction algorithms](https://arxiv.org/abs/0908.1741)
+(2010), and Fisher–Sills's
+[local-solubility and height algorithms](https://arxiv.org/abs/1103.4944)
+(2011). More specific implementation references appear in the documentation.
 
 ## License
 
 MIT. Copyright (c) 2026 Christopher D. Long.
+Sage/PARI remain separate dependencies under their own licenses.
