@@ -14,6 +14,7 @@ from .weierstrass import WeierstrassModel, WeierstrassChange
 from .cubic_conversion import CubicToQuartic, IdentityTwoCover
 from .marked_cover import MarkedQuarticCover, MarkedFourCover, MarkedRelativeResult
 from .two_selmer import two_selmer, TwoSelmerResult
+from .selmer_quartic import LabelledQuarticCover, QuarticPresentation
 
 __all__ = [
     "EtaleQuarticAlgebra", "FourCoverCandidate", "construct_four_cover", "CandidateDecision",
@@ -25,6 +26,6 @@ __all__ = [
     "padic_solubility_complete", "RationalRootIdentification",
     "WeierstrassModel", "WeierstrassChange", "CubicToQuartic", "IdentityTwoCover",
     "MarkedQuarticCover", "MarkedFourCover", "MarkedRelativeResult",
-    "two_selmer", "TwoSelmerResult",
+    "two_selmer", "TwoSelmerResult", "LabelledQuarticCover", "QuarticPresentation",
 ]
 __version__ = "0.4.0"
