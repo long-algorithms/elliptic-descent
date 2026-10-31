@@ -1,17 +1,21 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "elliptic-descent"
-version = "0.3.0"
-description = "Certified relative 4-descent for irreducible quartics over the rationals"
+version = "0.4.0"
+description = "Certified relative 4-descent for squarefree quartics over the rationals"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{name = "Christopher D. Long"}]
 keywords = ["elliptic curves", "descent", "number theory", "genus-one curves"]
 dependencies = ["sympy>=1.13,<2"]
+
+[project.urls]
+Repository = "https://github.com/long-algorithms/elliptic-descent"
+Documentation = "https://github.com/long-algorithms/elliptic-descent/blob/main/docs/v0.4.md"
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]

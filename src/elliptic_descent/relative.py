@@ -12,7 +12,8 @@ from time import perf_counter
 
 import sympy as sp
 
-from .arithmetic import nonnegative_integer
+from .arithmetic import AffineF2, nonnegative_integer
+from .accounting import valid_accounting
 from .backends.sage import sage_square_classes
 from .backends.sage_etale import sage_etale_square_classes
 from .etale import EtaleQuarticAlgebra
@@ -43,14 +44,23 @@ class RelativeDescentResult:
     support: tuple
     timings: tuple
     orientation: OrientationCertificate
+    candidate_space: AffineF2
 
     @property
     def factorization_type(self):
         return self.orientation.factorization_type
 
     @property
+    def accounting_consistent(self):
+        """Check labels and the recorded quotient, not backend exhaustiveness."""
+        return valid_accounting(
+            self.candidate_space, (c.label for c in self.candidates),
+            self.total_model_classes, self.scalar_basis, self.norm_dimension,
+        )
+
+    @property
     def enumeration_complete(self):
-        return len(self.candidates) == self.total_model_classes
+        return self.accounting_consistent and len(self.candidates) == self.total_model_classes
 
     @property
     def unresolved(self):
@@ -58,7 +68,10 @@ class RelativeDescentResult:
 
     @property
     def complete(self):
-        return self.enumeration_complete and not self.unresolved
+        return (self.enumeration_complete and all(
+            c.local.status in (LocalStatus.SOLUBLE, LocalStatus.INSOLUBLE)
+            for c in self.candidates
+        ))
 
     @property
     def certified(self):
@@ -173,4 +186,4 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
                                  scalar_basis, len(fibre.basis), space.arithmetic_proof,
                                  space.assumptions, space.support,
                                  (("arithmetic_seconds", arithmetic_seconds),
-                                  ("construction_and_local_seconds", local_seconds)), orientation)
+                                  ("construction_and_local_seconds", local_seconds)), orientation, quotient)

@@ -47,6 +47,7 @@ jobs:
       - run: /home/sage/sage/sage -python benchmarks/etale.py --sage --repeats 1 --verify > etale-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/two_quadratic.py --verify --repeats 1 > two-quadratic-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/rational_root.py --verify --repeats 1 > rational-root-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/release_audit.py > release-audit.json
       - uses: actions/upload-artifact@v4
         with:
           name: descent-sage-10.6
@@ -56,3 +57,4 @@ jobs:
             etale-results.jsonl
             two-quadratic-results.jsonl
             rational-root-results.jsonl
+            release-audit.json
