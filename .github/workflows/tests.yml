@@ -43,8 +43,12 @@ jobs:
             pytest_args: tests/test_sage_cassels_tate.py
           - group: radical
             pytest_args: tests/test_sage_pairing_radical.py
-          - group: fibres
-            pytest_args: tests/test_sage_four_selmer_fibres.py
+          - group: fibres-fixtures
+            pytest_args: tests/test_sage_four_selmer_fibres.py -k "explicit_global_fibres"
+          - group: fibres-behaviour
+            pytest_args: tests/test_sage_four_selmer_fibres.py -k "not explicit_global_fibres and not zero_fibre_transport"
+          - group: fibres-reference
+            pytest_args: tests/test_sage_four_selmer_fibres.py -k "zero_fibre_transport"
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root
@@ -57,7 +61,7 @@ jobs:
       - run: /home/sage/sage/sage -pip install -e '.[test]'
       - run: /home/sage/sage/sage -python -c "import sage.all; import sympy; print(sage.all.version())"
       # Disjoint groups cover the entire suite; no test is disabled or relaxed.
-      - run: /home/sage/sage/sage -python -m pytest -q --durations=15 --junitxml=sage-${{ matrix.group }}.xml ${{ matrix.pytest_args }}
+      - run: /home/sage/sage/sage -python -m pytest -vv --durations=20 -o faulthandler_timeout=120 --junitxml=sage-${{ matrix.group }}.xml ${{ matrix.pytest_args }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

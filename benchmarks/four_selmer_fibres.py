@@ -4,6 +4,8 @@ Record complete exact equivalence geometry for replay without Sage. Parent
 Selmer completeness and local enumeration remain separate certified dependencies.
 """
 import argparse
+import faulthandler
+import sys
 import json
 import time
 
@@ -87,24 +89,36 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture',choices=['all',*FIXTURES],default='all')
     parser.add_argument('--verify',action='store_true')
+    parser.add_argument('--traceback-interval',type=int,default=0,
+                        help='emit diagnostic stacks during long stages; 0 disables')
     args=parser.parse_args()
+    if args.traceback_interval < 0:
+        parser.error('--traceback-interval must be nonnegative')
+    if args.traceback_interval:
+        faulthandler.dump_traceback_later(args.traceback_interval,repeat=True)
     from sage.all import EllipticCurve, pari
     from sage.env import SAGE_VERSION
     names=tuple(FIXTURES) if args.fixture=='all' else (args.fixture,)
     for name in names:
+        def progress(stage):
+            print(f'{name}: {stage}',file=sys.stderr,flush=True)
+        progress('parent Selmer computation')
         start=time.perf_counter()
         S=two_selmer(FIXTURES[name],proof=True)
         parent_seconds=time.perf_counter()-start
         start=time.perf_counter()
+        progress('Cassels-Tate pairing')
         B=cassels_tate_pairing(S)
         pairing_seconds=time.perf_counter()-start
         start=time.perf_counter()
+        progress('global fibre assembly')
         F=assemble_four_selmer_fibres(S,B)
         assembly_seconds=time.perf_counter()-start
         verified=False
         start=time.perf_counter()
         independent_dimension=independent_pairing_rank=None
         if args.verify:
+            progress('independent counts and full evidence verification')
             independent_dimension=int(EllipticCurve(list(FIXTURES[name])).global_minimal_model()
                                       .mwrank_curve(verbose=False).selmer_rank())
             independent_pairing_rank=int(pari.ellinit(list(FIXTURES[name])).ellrank()[2])
@@ -113,6 +127,7 @@ def main():
                     or F.cardinality!=EXPECTED[name]):
                 raise ArithmeticError(f'global fibre verification failed: {name}')
         verification_seconds=time.perf_counter()-start
+        progress('portable geometry and kernel evidence export')
         record={**metadata(),'package_version':__version__,'sage':SAGE_VERSION,'fixture':name,
             'scope':'explicit global Selmer-4 fibres, projection and kernel; no global addition',
             'original_ainvs':vector(S.curves.original.ainvs),'selmer_dimension':S.dimension,
@@ -128,6 +143,9 @@ def main():
             'pairing_seconds':pairing_seconds,'assembly_seconds':assembly_seconds,
             'verification_seconds':verification_seconds,**geometry_record(F)}
         print(json.dumps(record,sort_keys=True),flush=True)
+        progress('completed')
+    if args.traceback_interval:
+        faulthandler.cancel_dump_traceback_later()
 
 
 if __name__=='__main__':
