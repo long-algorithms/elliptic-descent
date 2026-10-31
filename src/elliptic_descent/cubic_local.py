@@ -67,7 +67,7 @@ class CubicCover:
         X, Y, Z = self.map_weighted
         a1, a2, a3, a4, a6 = self.curve.ainvs
         residual = sp.expand(Y**2+a1*X*Y*Z+a3*Y*Z**3-X**3-a2*X**2*Z**2-a4*X*Z**4-a6*Z**6)
-        ideal = sp.groebner(self.quadrics, *U, order='grevlex')
+        ideal = sp.groebner(self.quadrics, *U, order='grevlex', domain=sp.QQ)
         return ideal.reduce(residual)[1] == 0
 
     def evaluate(self, point):
