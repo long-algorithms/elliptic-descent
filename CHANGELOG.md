@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.4 development
+## 0.4.0 — All squarefree degree-four factorization types
 
 - Add exact quartic etale arithmetic and factorwise square-class spaces (PR #5).
 - Extend complete relative descent to two irreducible quadratic factors, with
@@ -13,8 +13,12 @@
   verification of the canonical map against doubling.
 - Fix touching rational-root isolation intervals and extend independent eclib
   count checks, regression tests and benchmark artifacts.
-- Retain version 0.3.0 pending the final v0.4 release/audit step. Full curve-level
-  4-Selmer assembly, degree-three input conversion and point search remain separate.
+- Retain the affine candidate space and verify unique labels, membership and
+  dimension/count consistency before reporting complete enumeration.
+- Add a release-wide benchmark validator, independent split candidate/class
+  enumeration, and tested wheel/sdist packaging with content checksums.
+- Full curve-level 4-Selmer assembly, degree-three input conversion and point
+  search remain separate milestones; see docs/v0.4.md for the release contract.
 
 ## 0.3.0 — Complete relative descent for irreducible quartics
 

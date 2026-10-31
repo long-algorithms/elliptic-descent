@@ -20,4 +20,4 @@ __all__ = [
     "relative_four_descent", "RelativeDescentResult", "QuarticTwoCover",
     "padic_solubility_complete", "RationalRootIdentification",
 ]
-__version__ = "0.3.0"
+__version__ = "0.4.0"

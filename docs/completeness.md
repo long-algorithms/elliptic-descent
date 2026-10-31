@@ -1,15 +1,11 @@
 # What “complete 4-descent” means
 
-This is the project specification and release-gate checklist. **v0.3 implements
-complete relative 4-descent for smooth irreducible quartics over Q**, with the
-canonical marking and fixed-target equivalence documented in
-[relative-descent.md](relative-descent.md). See [v0.3 acceptance](v0.3.md).
-The subsequent [two-quadratic](two-quadratic-descent.md) and
-[rational-root](rational-root-descent.md) steps extend the complete API to all
-five squarefree degree-four factorization types, with their respective
-orientation rules. Package version 0.3.0 remains in place pending the final
-v0.4 release/audit step. Degree-three presentations are not silently converted.
-Full curve-level 4-Selmer-group computation is a separate, future gate.
+**v0.4.0 completes relative descent for all five squarefree degree-four
+factorization types over Q**, with the canonical marking and fixed-target
+equivalence. See [the release contract and acceptance checks](v0.4.md),
+[the baseline argument](relative-descent.md), [two-quadratic descent](two-quadratic-descent.md),
+and [rational-root descent](rational-root-descent.md). Cubic presentations are
+not silently converted. Full curve-level 4-Selmer computation is the next gate.
 
 ## Objects, levels, and equivalence
 
@@ -19,7 +15,7 @@ Exact algebraic identities establish that the map lands on the quartic;
 projective smoothness and basepoint-freeness are *separate* checks. This is not
 a Selmer or local-solubility calculation.
 
-**Relative 4-descent (v0.3).** Input a smooth, everywhere
+**Relative 4-descent (v0.4).** Input a smooth, everywhere
 locally soluble **2-covering with its specified map to E**, not merely a quartic
 with the same Jacobian. Enumerate all relevant everywhere locally soluble
 4-coverings above it, with their covering maps, up to a **declared equivalence
@@ -72,7 +68,7 @@ coincides with the desired relative Selmer set.
 an algorithm or proof-checking kernel. Its human-readable evidence references
 and flags do not, by themselves, establish mathematical conclusions.
 
-The v0.3 executable API returns `RelativeDescentResult`, with derived
+The executable API returns `RelativeDescentResult`, with derived
 completeness/proof flags and geometric/local evidence checks. Number-field
 certification remains a trusted Sage dependency. Manually constructing or
 modifying either result class is **not** a certificate.
@@ -122,10 +118,10 @@ Mordell–Weil basis, or triviality of `Sha(E)[4]`.
   and norm constraints, local solubility with `unknown` outcomes, Sage/PARI
   adapter, and explicit arithmetic proof assumptions. No completeness claim
   outside families with a documented proven bound.
-- **v0.3 — complete irreducible-quartic relative 4-descent (current):** soundness,
+- **v0.3 — complete irreducible-quartic relative 4-descent (completed):** soundness,
   exhaustiveness, nonredundancy, and unconditional certification for supported
   nonsingular irreducible quartics; positive and empty descent tests.
-- **v0.4 — every nonsingular quartic factorization type:** `4`, `3+1`, `2+2`,
+- **v0.4 — every nonsingular degree-four factorization type (current):** `4`, `3+1`, `2+2`,
   `2+1+1`, `1+1+1+1` with consistent covering equivalence and torsion cases.
 - **v0.5 — curve-level full 4-Selmer:** group, doubling, Cassels pairing,
   exact torsion bookkeeping, corresponding coverings for all relevant classes.

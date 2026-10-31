@@ -2,9 +2,9 @@
 
 Exact, testable algorithms for elliptic-curve descent over the rational numbers.
 
-**Complete relative 4-descent now supports all squarefree degree-four quartics over Q.**
-The package version remains **v0.3.0**; the rational-root extension completes
-the third v0.4 development step. The separate release/audit step is still pending.
+**v0.4.0: complete relative 4-descent for every squarefree degree-four quartic over Q.**
+The [release specification and audit guide](docs/v0.4.md) records the supported
+domain, verification requirements, distribution checks and trust boundary.
 Given a quartic 2-covering with its canonical map to its Jacobian, it enumerates
 all everywhere locally soluble lifts, with explicit quadric equations and maps,
 up to the fixed-target equivalence specified below. Complete mode has no
@@ -83,7 +83,9 @@ of Sha requires that additional information.
 `proof=True` explicitly requests Sage's unconditional number-field arithmetic.
 `proof=False` retains a GRH assumption for nonrational field factors. Fully
 split rational arithmetic has no class-group dependency and can remain certified.
-`verify_evidence()` checks exact geometric/local evidence, not a second
+`candidate_space` retains the affine enumeration, and `accounting_consistent`
+checks unique labels, membership and counts. `verify_evidence()` checks exact
+geometric/local evidence, not a second
 independent class-group computation. Its separate verification budget may be
 insufficient; failure to verify is not a proof of solubility.
 
@@ -129,6 +131,7 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 
 ## Documentation
 
+- [v0.4 release specification and audit guide](docs/v0.4.md)
 - [Relative descent: contract and completeness argument](docs/relative-descent.md)
 - [Two-quadratic descent: equivalence and independent checks](docs/two-quadratic-descent.md)
 - [Rational-root descent and marked Jacobian maps](docs/rational-root-descent.md)
@@ -139,9 +142,9 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 - [Full project completeness specification](docs/completeness.md)
 - [Changelog](CHANGELOG.md)
 
-All five degree-four factorization patterns are implemented. The next planned
-step is the final v0.4 certification/release audit. The full curve-level
-4-Selmer group and its group operations remain v0.5 work.
+All five degree-four factorization patterns are implemented. The next
+mathematical milestone is v0.5: the full curve-level 4-Selmer group, its
+operations, doubling map, pairing and torsion bookkeeping.
 
 ## References
 
