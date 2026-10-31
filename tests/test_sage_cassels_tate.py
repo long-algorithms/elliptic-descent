@@ -122,3 +122,14 @@ def test_rational_kummer_classes_lie_in_radical_and_model_changes_commute():
     assert Q.certified and Q.verify_evidence()
     for c,d in product(range(S.cardinality),repeat=2):
         assert Q.evaluate(S.transport_to(other,c,change),S.transport_to(other,d,change))==P.evaluate(c,d)
+
+
+def test_parameter_changed_representatives_give_the_same_nonzero_value():
+    from elliptic_descent.cassels_tate import _PairingBuilder
+    S=selmer(FIXTURES[-1])
+    builder=_PairingBuilder(S)
+    for c in (1,2,3):
+        C=S.quartic_cover(c,parameter_change=((1,1),(0,1)))
+        builder.normalized[c]=normalize_pairing_quartic(C)
+    entry=builder.entry(1,2,max_local_trials=20000)
+    assert entry.complete and entry.verify() and entry.bit==pairing(FIXTURES[-1]).evaluate(1,2)==1

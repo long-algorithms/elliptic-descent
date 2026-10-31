@@ -53,6 +53,8 @@ jobs:
       - run: /home/sage/sage/sage -python benchmarks/marked_models.py --sage --repeats 1 --verify > marked-models-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/two_selmer.py --verify > two-selmer-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/selmer_quartics.py --verify > selmer-quartics-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/cassels_tate.py --verify > cassels-tate-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/replay_pairing.py cassels-tate-results.jsonl > pairing-replay.json
       - uses: actions/upload-artifact@v4
         with:
           name: descent-sage-10.6
@@ -66,3 +68,5 @@ jobs:
             marked-models-results.jsonl
             two-selmer-results.jsonl
             selmer-quartics-results.jsonl
+            cassels-tate-results.jsonl
+            pairing-replay.json

@@ -15,6 +15,7 @@ from .cubic_conversion import CubicToQuartic, IdentityTwoCover
 from .marked_cover import MarkedQuarticCover, MarkedFourCover, MarkedRelativeResult
 from .two_selmer import two_selmer, TwoSelmerResult
 from .selmer_quartic import LabelledQuarticCover, QuarticPresentation
+from .cassels_tate import cassels_tate_pairing, pairing_entry, CasselsTatePairing
 
 __all__ = [
     "EtaleQuarticAlgebra", "FourCoverCandidate", "construct_four_cover", "CandidateDecision",
@@ -27,5 +28,6 @@ __all__ = [
     "WeierstrassModel", "WeierstrassChange", "CubicToQuartic", "IdentityTwoCover",
     "MarkedQuarticCover", "MarkedFourCover", "MarkedRelativeResult",
     "two_selmer", "TwoSelmerResult", "LabelledQuarticCover", "QuarticPresentation",
+    "cassels_tate_pairing", "pairing_entry", "CasselsTatePairing",
 ]
 __version__ = "0.4.0"
