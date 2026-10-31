@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — v0.5 development
+
+- Add exact marked Weierstrass models, inverse/composed changes, and target translations.
+- Convert cubic presentations explicitly to quartics, retaining branch/infinite points and supplied maps.
+- Construct the zero 2-Selmer class as multiplication by two on the original curve.
+- Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
+- Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
+- Keep version 0.4.0; no full labelled 2-/4-Selmer computation is claimed.
+
 ## 0.4.0 — All squarefree degree-four factorization types
 
 - Add exact quartic etale arithmetic and factorwise square-class spaces (PR #5).
