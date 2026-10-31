@@ -4,6 +4,10 @@ The low-level norm-fibre API introduced in v0.2 deliberately carries no relative
 descent-completeness flag. The v0.3 layer performs the additional quotient,
 orientation and local steps described in [relative-descent.md](relative-descent.md).
 
+The additive [quartic etale backend](etale-arithmetic.md) now supplies CRT maps
+and factorwise square classes for reducible quartics as v0.4 groundwork. It does
+not change the irreducible-only contract of the complete relative-descent API.
+
 ## What is computed
 
 For an irreducible squarefree quartic `f` over Q, put `K=Q(theta)` with

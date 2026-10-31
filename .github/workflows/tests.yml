@@ -20,10 +20,13 @@ jobs:
       - run: python -m pytest -q
       - run: python benchmarks/geometry.py --repeats 1 --verify
       - run: python benchmarks/foundation.py --repeats 1 --verify > foundation-results.jsonl
+      - run: python benchmarks/etale.py --repeats 1 --verify > etale-results.jsonl
       - uses: actions/upload-artifact@v4
         with:
           name: foundation-python-${{ matrix.python-version }}
-          path: foundation-results.jsonl
+          path: |
+            foundation-results.jsonl
+            etale-results.jsonl
   sage:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -41,9 +44,11 @@ jobs:
       - run: /home/sage/sage/sage -python -m pytest -q
       - run: /home/sage/sage/sage -python benchmarks/foundation.py --sage --repeats 1 --verify > sage-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/relative.py --verify --repeats 1 > relative-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/etale.py --sage --repeats 1 --verify > etale-results.jsonl
       - uses: actions/upload-artifact@v4
         with:
           name: descent-sage-10.6
           path: |
             sage-results.jsonl
             relative-results.jsonl
+            etale-results.jsonl
