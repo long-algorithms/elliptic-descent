@@ -182,6 +182,12 @@ def pairing_entry(selmer, left, right, *, max_local_trials=None):
     return _PairingBuilder(selmer).entry(left, right, max_local_trials=max_local_trials)
 
 
+def _evaluate_matrix(rows, left, right):
+    """Evaluate one already materialized matrix; do not rebuild it per entry."""
+    return sum(((left >> i) & 1)*((right >> j) & 1)*rows[i][j]
+               for i in range(len(rows)) for j in range(len(rows))) % 2
+
+
 class _MatrixOperations:
     """Exact linear algebra shared by original and explicitly rebased matrices."""
     @property
@@ -191,13 +197,13 @@ class _MatrixOperations:
     def evaluate(self, left, right):
         self.selmer.ambient_label(left)
         self.selmer.ambient_label(right)
-        return sum(((int(left) >> i) & 1)*((int(right) >> j) & 1)*self.matrix[i][j]
-                   for i in range(self.dimension) for j in range(self.dimension)) % 2
+        return _evaluate_matrix(self.matrix, int(left), int(right))
 
     @property
     def radical_basis(self):
         rows = self.matrix
-        columns = tuple(sum(rows[i][j] << i for i in range(self.dimension)) for j in range(self.dimension))
+        n = len(rows)
+        columns = tuple(sum(rows[i][j] << i for i in range(n)) for j in range(n))
         return affine_f2(columns, 0).basis
 
     @property
@@ -210,7 +216,8 @@ class _MatrixOperations:
 
     def in_radical(self, coordinates):
         self.selmer.ambient_label(coordinates)
-        return all(self.evaluate(coordinates, 1 << j) == 0 for j in range(self.dimension))
+        rows = self.matrix
+        return all(_evaluate_matrix(rows, int(coordinates), 1 << j) == 0 for j in range(len(rows)))
 
     def with_basis(self, ambient_labels):
         return RebasedCasselsTatePairing(self, self.selmer.with_basis(ambient_labels))
@@ -240,7 +247,8 @@ class CasselsTatePairing(_MatrixOperations):
     def matrix(self):
         if not self.complete:
             raise ValueError('an incomplete pairing matrix has no certified entries/radical')
-        rows = [[0]*self.dimension for _ in range(self.dimension)]
+        n = self.dimension
+        rows = [[0]*n for _ in range(n)]
         for e in self.entries:
             i, j = e.left.bit_length()-1, e.right.bit_length()-1
             rows[i][j] = rows[j][i] = e.bit
@@ -280,8 +288,12 @@ class RebasedCasselsTatePairing(_MatrixOperations):
 
     @property
     def matrix(self):
+        # Read the original matrix once, including its completeness check.
+        # Calling original.evaluate repeatedly can rebuild nested rebased
+        # matrices and perform the same parent-ledger audit many times.
+        rows = self.original.matrix
         images = tuple(self.original.selmer.coordinates_of_label(b) for b in self.selmer.basis_labels)
-        return tuple(tuple(self.original.evaluate(a, b) for b in images) for a in images)
+        return tuple(tuple(_evaluate_matrix(rows, a, b) for b in images) for a in images)
 
     def verify_evidence(self):
         return self.original.verify_evidence() and self.selmer.verify_evidence()
