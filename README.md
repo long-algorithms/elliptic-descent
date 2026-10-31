@@ -36,20 +36,29 @@ assert D.evaluate((1, 0, 0, 0))[0] == (0, 0)
 ```
 
 See [construction and conventions](docs/algorithm.md) for the norm identity,
-map, limitations, and references.
+map, limitations, and references. The project now has a
+[completeness specification and release gates](docs/completeness.md), including
+explicit distinction between partial, conditional, and certified results.
+The `status.py` bookkeeping types reserve these distinctions for future descent
+backends; they do **not** calculate or certify Selmer groups. The geometric
+prototype additionally provides optional exact `check_smoothness()` and
+`check_map_basepoint_free()` checks over an algebraic closure.
 
 ## Development plan
 
-1. **v0.1.0** — exact quartic-algebra geometry, candidate quadrics, map
-   identities, negative tests, and JSON microbenchmarks (current release).
-2. Square-class enumeration over finite supports, norm-space computation,
-   certified class-group/units dependencies, and PARI/Sage adapters.
-3. Exact local-solubility algorithms with ternary outcomes; complete per-quartic
-   locally soluble candidate enumeration with independently checked status.
-4. Minimization and reduction of pairs of quadrics; certified maps and point
-   searches; regression corpus against published Magma examples.
-5. Cassels–Tate pairing integration, curve-level 4-descent, optimized arithmetic
-   kernels, and contributions to Sage, PARI/GP, and eclib.
+1. **v0.1.x** — exact quartic-algebra geometry, candidate quadrics, map
+   identities, projective smoothness/basepoint checks, negative tests,
+   status bookkeeping, and JSON microbenchmarks (current prototype).
+2. **v0.2** — square-class enumeration over finite supports, norm-space
+   computation, certified class-group/units dependencies, PARI/Sage adapters,
+   and exact local solubility with honest unknown outcomes.
+3. **v0.3** — complete certified relative 4-descent for irreducible quartics.
+4. **v0.4** — all nonsingular quartic factorization types.
+5. **v0.5** — full curve-level 4-Selmer group, maps, and Cassels pairing.
+6. **v1.0** — practical minimization, reduction, point search, and benchmarks.
+
+See the [formal release gates](docs/completeness.md) for precise acceptance
+criteria and required independent tests. These milestones are not timelines.
 
 Correctness, local solubility, completeness, and arithmetic proof assumptions
 will be represented separately. Benchmark fixtures will distinguish timings of

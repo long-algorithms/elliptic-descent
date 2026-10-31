@@ -59,3 +59,24 @@ def test_projective_scaling_and_zero_rejection():
     assert image2 == (9 * image[0], 81 * image[1], 9 * image[2])
     with pytest.raises(ValueError, match="projective point"):
         D.evaluate((0, 0, 0, 0))
+
+
+@pytest.mark.parametrize("f,xi", [
+    ((1, -1, 0, 0, 1), (0, -1, 0, 0)),
+    ((1, -1, 0, 0, 4), (1, 0, 0, 0)),
+    ((4, 0, -5, 0, 1), (1, 0, 0, 0)),
+])
+def test_projective_smoothness_and_no_basepoints(f, xi):
+    D = construct_four_cover(f, xi)
+    assert D.check_smoothness()
+    assert D.check_map_basepoint_free()
+
+
+def test_degenerate_equations_fail_smoothness_and_basepoint_checks():
+    from dataclasses import replace
+
+    D = construct_four_cover((1, -1, 0, 0, 1), (0, -1, 0, 0))
+    # Deliberately corrupt an immutable model without passing the constructor.
+    broken = replace(D, q=(sp.Integer(0),)*4)
+    assert not broken.check_smoothness()
+    assert not broken.check_map_basepoint_free()
