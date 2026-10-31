@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elliptic-descent"
-version = "0.1.0"
-description = "Exact reference geometry for explicit 4-descent on elliptic curves"
+version = "0.2.0"
+description = "Exact arithmetic and local foundations for explicit 4-descent"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
