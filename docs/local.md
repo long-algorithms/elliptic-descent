@@ -1,4 +1,8 @@
-# Local solubility and certificates (v0.2)
+# Reference local solubility and certificates
+
+The original bounded reference routines remain available. v0.3 adds complete
+real decisions for square-class models and unbounded smooth p-adic decisions;
+see [relative-descent.md](relative-descent.md) for their algorithms and proof.
 
 The reference routines accept two nonzero homogeneous quadrics in four
 variables with exact rational coefficients. They clear denominators, divide
@@ -51,7 +55,9 @@ the residue search. No floating-point approximation enters this check.
 If every primitive residue at some modulus p^k has been excluded, there is no
 Q_p point. The negative certificate records that modulus and model identity.
 Its independent verifier directly enumerates all normalized projective
-residues modulo p^k rather than calling the solver's recursive lifting code.
+residues modulo p^k when affordable. Otherwise it enumerates the initial
+F_p residues directly and uses separate rank-compatibility checks at later
+levels. Neither path calls the solver's eliminant or RREF routines.
 There are
 
 \[

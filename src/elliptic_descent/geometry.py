@@ -132,6 +132,29 @@ class FourCoverCandidate:
         formula = sp.expand(sum(self.f[i] * (-a)**i * b**(4 - i) for i in range(5)) / self.f[4])
         return sp.expand(direct - formula) == 0
 
+    def check_construction(self):
+        """Check an exact algebraic certificate for the standard construction.
+
+        A squarefree f, invertible xi, and the verified square-class equations
+        imply smoothness, basepoint freeness and map degree 4 by the diagonal
+        construction theorem. The norm form is independently checked using a
+        resultant, not the multiplication-matrix determinant used to build it.
+        The slower generic Groebner audit routines remain available separately.
+        This proves no local-solubility or enumeration claim.
+        """
+        try:
+            f = _five(self.f)
+            xi = _four(self.xi, "xi")
+            if len(self.q) != 4 or not _norm(xi, f) or not self.check_algebra():
+                return False
+            t = sp.Symbol("t")
+            polynomial = sum(c*t**i for i, c in enumerate(f))
+            generic = sum(u*t**i for i, u in enumerate(U))
+            norm = sp.resultant(polynomial, generic, t)/f[4]**3
+            return sp.expand(norm-self.norm_u) == 0
+        except (TypeError, ValueError):
+            return False
+
     def check_smoothness(self):
         """Certify smoothness over Qbar via the projective Jacobian criterion.
 

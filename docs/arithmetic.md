@@ -1,4 +1,8 @@
-# Finite-support arithmetic (v0.2)
+# Finite-support arithmetic
+
+The low-level norm-fibre API introduced in v0.2 deliberately carries no relative
+descent-completeness flag. The v0.3 layer performs the additional quotient,
+orientation and local steps described in [relative-descent.md](relative-descent.md).
 
 ## What is computed
 
@@ -71,7 +75,7 @@ many primes occur in the divisor of `xi`, so a rational scalar makes all
 valuations outside S even.
 
 This proves **containment up to rational scalars**, not a bijection of covering
-classes. The implementation does not yet perform the scalar quotient, resolve
+classes. The low-level foundation pipeline does not perform the scalar quotient, resolve
 norm-witness orientations or automorphism identifications, or prove the
 completeness of a relative Selmer-set parametrization. Consequently the
 pipeline always has `relative_descent_complete=False`. Even a completely
@@ -97,9 +101,12 @@ A manually altered status flag cannot turn an unchecked basis into a proof.
 Rational square-class encoding strips S-valuations and checks that the residual
 numerator and denominator are integer squares. Factorization is needed for
 support construction, not for every norm bit vector. Factors are reconstructed
-and primality-checked. The reference implementation deliberately rejects prime
-factors at least `2**64`, beyond SymPy's documented deterministic primality
-range; it does not relabel a probable-prime result as certified.
+and primality-checked. Large integers use Sage/PARI factorization with
+`algorithm="pari", proof=True` when Sage is available; this does not depend
+on accepting probable-prime factors from the Python backend. Below `2**64`
+the reference layer uses SymPy's documented deterministic
+primality range. Larger factors use Sage/PARI `is_prime(proof=True)`, or raise
+when Sage is unavailable. A probable-prime result is never labelled certified.
 
 ## PARI adapter
 

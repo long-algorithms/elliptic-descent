@@ -40,7 +40,10 @@ jobs:
       - run: /home/sage/sage/sage -python -c "import sage.all; import sympy; print(sage.all.version())"
       - run: /home/sage/sage/sage -python -m pytest -q
       - run: /home/sage/sage/sage -python benchmarks/foundation.py --sage --repeats 1 --verify > sage-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/relative.py --verify --repeats 1 > relative-results.jsonl
       - uses: actions/upload-artifact@v4
         with:
-          name: foundation-sage-10.6
-          path: sage-results.jsonl
+          name: descent-sage-10.6
+          path: |
+            sage-results.jsonl
+            relative-results.jsonl
