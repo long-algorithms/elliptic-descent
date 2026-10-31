@@ -17,15 +17,13 @@ remain separate milestones.
 
 ## v0.5 development
 
-The first four steps provide [marked curve interfaces](docs/marked-coverings.md),
-[certified labelled 2-Selmer arithmetic](docs/two-selmer.md),
-[marked quartics for arbitrary classes](docs/selmer-quartics.md), and the
-[labelled Cassels–Tate pairing and radical](docs/cassels-tate.md).
-`two_selmer(E)` computes arithmetic classes; `S.quartic_cover(c)` constructs
-representatives; `cassels_tate_pairing(S)` identifies the subspace that lifts
-to Selmer-4 using checked local evidence. The [eight-step plan](docs/v0.5-plan.md)
-records the remaining global equivalence and group-assembly work. The package
-stays **0.4.0**. A pairing and its radical are not the full 4-Selmer group.
+The first five steps provide marked curve interfaces, labelled 2-Selmer arithmetic,
+marked quartics for arbitrary classes, the Cassels–Tate pairing, and
+[global 4-Selmer fibre assembly](docs/four-selmer-fibres.md). The assembler
+retains actual rational-torsion actions, explicit covering-equivalence matrices,
+and the kernel/projection maps. It does not merely divide covering counts.
+Global group addition and invariant-factor generators remain the next step in
+the [v0.5 plan](docs/v0.5-plan.md). The package stays **0.4.0** during development.
 
 ## Install and run
 

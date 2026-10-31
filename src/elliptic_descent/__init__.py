@@ -16,6 +16,7 @@ from .marked_cover import MarkedQuarticCover, MarkedFourCover, MarkedRelativeRes
 from .two_selmer import two_selmer, TwoSelmerResult
 from .selmer_quartic import LabelledQuarticCover, QuarticPresentation
 from .cassels_tate import cassels_tate_pairing, pairing_entry, CasselsTatePairing
+from .four_selmer_fibres import assemble_four_selmer_fibres, FourSelmerFibres
 
 __all__ = [
     "EtaleQuarticAlgebra", "FourCoverCandidate", "construct_four_cover", "CandidateDecision",
@@ -29,5 +30,6 @@ __all__ = [
     "MarkedQuarticCover", "MarkedFourCover", "MarkedRelativeResult",
     "two_selmer", "TwoSelmerResult", "LabelledQuarticCover", "QuarticPresentation",
     "cassels_tate_pairing", "pairing_entry", "CasselsTatePairing",
+    "assemble_four_selmer_fibres", "FourSelmerFibres",
 ]
 __version__ = "0.4.0"
