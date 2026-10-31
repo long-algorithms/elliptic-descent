@@ -101,7 +101,7 @@ class AssembledFibre:
 
     def verify_structure(self, selmer, torsion):
         if (self.representative.selmer is not selmer or not self.lifts.complete
-                or self.expected_liftable not in (True,False)):
+                or type(self.expected_liftable) is not bool):
             return False
         models = self.models
         if not self.expected_liftable:
@@ -186,6 +186,15 @@ class KernelInjection:
         orbit = next(i for i,indices in enumerate(self.fibre.orbits) if index in indices)
         return self.fibre.classes[orbit]
 
+    def quotient_coordinates(self, coordinates):
+        self.selmer.ambient_label(coordinates)
+        value = normal_form(int(coordinates),self.torsion.image_basis)
+        return F2Labels(self.selmer.dimension,self.quotient.basis).coordinates(value)
+
+    def from_quotient(self, coordinates):
+        value = F2Labels(self.selmer.dimension,self.quotient.basis).ambient(coordinates)
+        return self.apply(value)
+
     @property
     def kernel_basis(self):
         return self.torsion.image_basis
@@ -193,7 +202,8 @@ class KernelInjection:
     def verify(self):
         S,F,D = self.selmer,self.fibre,self.torsion
         if (F.coordinates != 0 or not F.verify_structure(S,D)
-                or len(self.labels)!=len(F.models) or set(self.labels)!=set(range(S.cardinality))):
+                or len(self.labels)!=len(F.models) or any(type(c) is not int for c in self.labels)
+                or set(self.labels)!=set(range(S.cardinality))):
             return False
         for label,model in zip(self.labels,F.models):
             if S.coordinates(zero_fibre_kummer(F.representative,model,S.arithmetic)) != label:
@@ -307,6 +317,10 @@ class FourSelmerFibres:
         if not result.verify():
             raise ArithmeticError('actual zero-fibre labels disagree with the kernel exact sequence')
         return result
+
+    @property
+    def zero_class(self):
+        return self.kernel_map.apply(0)
 
     def verify_evidence(self, *, max_nodes=1_000_000):
         return (self.complete and self.selmer.verify_evidence(max_nodes=max_nodes)

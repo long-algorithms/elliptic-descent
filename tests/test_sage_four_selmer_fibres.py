@@ -58,6 +58,9 @@ def test_explicit_global_fibres_and_exact_sequence(name,a,size):
                 assert evidence.verify() and evidence.coordinate_matrix.det()!=0
     I=F.kernel_map
     assert I.verify() and I.quotient.cardinality==1<<F.kernel_dimension
+    assert F.zero_class.key == I.apply(0).key
+    for c in range(S.cardinality):
+        assert I.from_quotient(I.quotient_coordinates(c)).key == I.apply(c).key
     for a,b in product(range(S.cardinality),repeat=2):
         same = I.apply(a).key==I.apply(b).key
         from elliptic_descent.quotient import normal_form
@@ -145,3 +148,16 @@ def test_corrupted_action_orbit_and_kernel_labels_fail_verification():
     with pytest.raises(ValueError):F.projection((999,0))
     with pytest.raises(ValueError):F.projection((0,999))
     assert not replace(F,fibres=()).complete
+
+
+def test_matching_retains_inequivalent_orientations_and_rejects_split_duplicates():
+    from elliptic_descent.geometry import construct_four_cover
+    from elliptic_descent.backends.sage_fibres import oriented_class_matcher
+    D=construct_four_cover((6,0,-5,0,1),(1,0,0,0))
+    opposite=replace(D,norm_witness=-D.norm_witness)
+    matcher=oriented_class_matcher(D.f,(D,opposite))
+    assert matcher.scalar_square(D,opposite) is None
+    assert matcher.scalar_square(D,D).verify(D,D)
+    split=construct_four_cover((4,0,-5,0,1),(1,0,0,0))
+    with pytest.raises(ArithmeticError):
+        oriented_class_matcher(split.f,(split,replace(split,norm_witness=-split.norm_witness)))

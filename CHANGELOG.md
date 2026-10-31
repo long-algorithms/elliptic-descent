@@ -2,6 +2,11 @@
 
 ## Unreleased — v0.5 development
 
+- Assemble global 4-Selmer fibres by verified rational 2-torsion actions on relative coverings.
+- Retain explicit equivalence matrices, projection, and the actual kernel injection from labelled Selmer-2 classes.
+- Check torsion stabilizers, including rational 4-torsion, and preserve partial/conditional status.
+- Add independent split orbit tests and portable exact geometry/kernel benchmark replay.
+
 - Compute the labelled Cassels–Tate pairing and its radical from Fisher's quartic formula.
 - Retain common-invariant normalization, product square roots and exact local Hilbert-symbol evidence.
 - Add direct/basis/model/liftability checks and portable pairing-evidence benchmarks.
@@ -19,7 +24,7 @@
 - Construct the zero 2-Selmer class as multiplication by two on the original curve.
 - Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
 - Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
-- Keep version 0.4.0; global fibre equivalence and full 4-Selmer assembly remain later steps.
+- Keep version 0.4.0; global group addition and invariant-factor generators remain later steps.
 
 ## 0.4.0 — All squarefree degree-four factorization types
 
