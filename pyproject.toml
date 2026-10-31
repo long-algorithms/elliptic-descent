@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elliptic-descent"
+version = "0.1.0"
+description = "Exact reference geometry for explicit 4-descent on elliptic curves"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Christopher D. Long"}]
+keywords = ["elliptic curves", "descent", "number theory", "genus-one curves"]
+dependencies = ["sympy>=1.13,<2"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
