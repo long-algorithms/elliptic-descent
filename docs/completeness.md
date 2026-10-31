@@ -1,10 +1,10 @@
 # What “complete 4-descent” means
 
-This is a specification and release-gate checklist. **v0.2 implements the
-arithmetic/local foundation, not complete relative 4-descent.** The geometric
-constructor, finite-support norm fibres, Sage/PARI adapters and bounded exact
-local tests are implemented. Complete relative Selmer parametrization and
-covering-equivalence accounting remain v0.3 work. See [v0.2 acceptance](v0.2.md).
+This is the project specification and release-gate checklist. **v0.3 implements
+complete relative 4-descent for smooth irreducible quartics over Q**, with the
+canonical marking and fixed-target equivalence documented in
+[relative-descent.md](relative-descent.md). See [v0.3 acceptance](v0.3.md).
+Full curve-level 4-Selmer-group computation is a separate, future gate.
 
 ## Objects, levels, and equivalence
 
@@ -14,7 +14,7 @@ Exact algebraic identities establish that the map lands on the quartic;
 projective smoothness and basepoint-freeness are *separate* checks. This is not
 a Selmer or local-solubility calculation.
 
-**Relative 4-descent (first mathematical goal).** Input a smooth, everywhere
+**Relative 4-descent (v0.3).** Input a smooth, everywhere
 locally soluble **2-covering with its specified map to E**, not merely a quartic
 with the same Jacobian. Enumerate all relevant everywhere locally soluble
 4-coverings above it, with their covering maps, up to a **declared equivalence
@@ -63,12 +63,14 @@ coincides with the desired relative Selmer set.
 - **Exhaustiveness and equivalence:** whether all candidate classes have been
   enumerated and whether the declared quotient is completely accounted for.
 
-`DescentResult` in `status.py` is an initial *decision ledger*, not an
-algorithm or proof-checking kernel. Its `complete` and `certified` properties
-are derived conservatively from the above flags. For now evidence fields are
-human-readable references; future backends must attach verifiable certificates
-and must set a flag only after the required mathematical proof has been
-established. Manual construction of a `DescentResult` is **not** a certificate.
+`DescentResult` in `status.py` is the original generic *decision ledger*, not
+an algorithm or proof-checking kernel. Its human-readable evidence references
+and flags do not, by themselves, establish mathematical conclusions.
+
+The v0.3 executable API returns `RelativeDescentResult`, with derived
+completeness/proof flags and geometric/local evidence checks. Number-field
+certification remains a trusted Sage dependency. Manually constructing or
+modifying either result class is **not** a certificate.
 
 In particular:
 
@@ -111,11 +113,11 @@ Mordell–Weil basis, or triviality of `Sha(E)[4]`.
 - **v0.1.x — geometric baseline (completed):** quartic algebra and norm witness,
   quadric equations, map identity, exact model-smoothness and basepoint checks,
   negative inputs, preliminary timing harness. Not complete descent.
-- **v0.2 — arithmetic and local foundation (current):** finitely supported square classes
+- **v0.2 — arithmetic and local foundation (completed):** finitely supported square classes
   and norm constraints, local solubility with `unknown` outcomes, Sage/PARI
   adapter, and explicit arithmetic proof assumptions. No completeness claim
   outside families with a documented proven bound.
-- **v0.3 — complete irreducible-quartic relative 4-descent:** soundness,
+- **v0.3 — complete irreducible-quartic relative 4-descent (current):** soundness,
   exhaustiveness, nonredundancy, and unconditional certification for supported
   nonsingular irreducible quartics; positive and empty descent tests.
 - **v0.4 — every nonsingular quartic factorization type:** `4`, `3+1`, `2+2`,
@@ -157,7 +159,9 @@ checks the algebra, map identity, smoothness, and basepoint freeness
 separately from the construction timing; none of these certify local
 solubility or complete 4-descent. `benchmarks/foundation.py` adds arithmetic,
 local screening and certificate verification in v0.2. Both preserve scope and
-proof metadata. Future optimized implementations must be differential-tested
+proof metadata. `benchmarks/relative.py` adds the v0.3 end-to-end corpus and
+separate solver/evidence-verification timings. Future optimized implementations
+must be differential-tested
 against these exact reference paths.
 
 ## References

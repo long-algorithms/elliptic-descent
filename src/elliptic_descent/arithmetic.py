@@ -55,7 +55,15 @@ def prime_support(values):
         if not value:
             raise ValueError("zero has no finite prime support")
         for n in (abs(int(value.p)), int(value.q)):
-            factors = sp.factorint(n)
+            if n >= 2**64:
+                try:
+                    from sage.all import ZZ
+                except ImportError:
+                    factors = sp.factorint(n)
+                else:
+                    factors = {int(p): int(e) for p,e in ZZ(n).factor(algorithm="pari", proof=True)}
+            else:
+                factors = sp.factorint(n)
             if sp.prod(p**e for p, e in factors.items()) != n:
                 raise ArithmeticError("factorization reconstruction failed")
             support.update(prime(p) for p in factors)

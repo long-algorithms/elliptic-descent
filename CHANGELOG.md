@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 — Complete relative descent for irreducible quartics
+
+- Assemble an exhaustive norm-pair descent with the rational-scalar quotient
+  and both fixed-target orientations; keep the involution quotient explicit.
+- Add canonical quartic-to-Jacobian maps and composition of covering maps.
+- Add complete real sign decisions and unbounded p-adic decisions on smooth
+  models, with exact finite-field elimination and linearized lifting.
+- Resolve difficult reductions through verified integral coordinate/equation
+  changes; retain independent positive and negative certificate verification.
+- Add a fast exact construction audit backed by the published construction
+  theorem; retain generic Groebner audits as an independent reference.
+- Extend certified primality beyond 64 bits through Sage/PARI.
+- Add published positive/empty descents, torsion and quotient-dependency cases,
+  tamper/budget tests, end-to-end benchmarks, and reproducible arithmetic exports.
+- Document the supported domain, completeness argument, equivalence, and trusted
+  arithmetic dependencies. Full curve-level 4-Selmer computation remains future work.
+
 ## 0.2.0 — Arithmetic and local foundations
 
 - Add finite-support square classes, exact affine norm equations, explicit norm

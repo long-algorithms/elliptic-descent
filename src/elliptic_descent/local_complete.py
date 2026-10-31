@@ -74,6 +74,7 @@ def _bivariate_points(first, second, y, z, p, budget):
         else:
             zs = range(p)
         for value_z in zs:
+            budget.tick()
             # Check every reconstructed root; eliminants can have extra roots.
             if ((A*value_z*value_z+bb*value_z+cc) % p == 0
                     and (D*value_z*value_z+ee*value_z+ff) % p == 0):

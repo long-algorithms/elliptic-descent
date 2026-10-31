@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elliptic-descent"
-version = "0.2.0"
-description = "Exact arithmetic and local foundations for explicit 4-descent"
+version = "0.3.0"
+description = "Certified relative 4-descent for irreducible quartics over the rationals"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
