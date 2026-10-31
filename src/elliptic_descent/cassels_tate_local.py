@@ -57,20 +57,35 @@ def _real_samples(g):
 
 
 def _finite_samples(p):
-    """A dense sequence in both disjoint P^1(Q_p) charts.
+    """A dense rational sequence on P^1(Q_p), favoring small heights.
 
-    Integers are dense in Z_p. The second chart is (1:p*t). No artificial
-    bound is implicit; max_trials is the caller's explicit resource limit.
-    Small signed integers are tested first, then the same complete traversal.
+    A short low-height rational sweep reaches p-adic neighborhoods which may
+    require a very large integer in either of the two standard affine charts.
+    The subsequent unbounded chart traversal is retained, so this is purely
+    an optimization and not a probabilistic or bounded local test.
     """
     yield sp.S.One, sp.S.Zero
-    for n in count(0):
-        values = (0,) if n == 0 else (n, -n)
-        for t in values:
-            yield sp.Integer(t), sp.S.One
-            if t:
-                yield sp.S.One, sp.Integer(p*t)
-
+    for n in range(-8, 9):
+        yield sp.Integer(n), sp.S.One
+        if n:
+            yield sp.S.One, sp.Integer(p*n)
+    # A small Farey-style sweep: every nonzero primitive rational denominator
+    # up to 64 occurs; no unsupported local-solubility claim is made by this.
+    for height in range(1, 65):
+        for b in range(1, height+1):
+            if b == height:
+                numerators = range(-height, height+1)
+            else:
+                numerators = (-height, height)
+            for a in numerators:
+                if gcd(a, b) == 1:
+                    yield sp.Integer(a), sp.Integer(b)
+    # Unbounded original coverage of the affine and infinity p-adic charts.
+    for n in count(9):
+        yield sp.Integer(n), sp.S.One
+        yield sp.Integer(-n), sp.S.One
+        yield sp.S.One, sp.Integer(p*n)
+        yield sp.S.One, sp.Integer(-p*n)
 
 @dataclass(frozen=True)
 class PairingLocalEvidence:

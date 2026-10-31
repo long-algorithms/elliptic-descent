@@ -18,7 +18,7 @@ from elliptic_descent.cassels_tate_forms import FisherQuartic, change_parameters
 @lru_cache(maxsize=8)
 def computed(a):
     S=two_selmer(a)
-    return S,cassels_tate_pairing(S,max_local_trials=20000)
+    return S,cassels_tate_pairing(S)
 
 
 def test_nonzero_pairing_with_nonzero_radical_and_arbitrary_basis_change():
