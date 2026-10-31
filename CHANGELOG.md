@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.5 development
 
+- Compute the labelled Cassels–Tate pairing and its radical from Fisher's quartic formula.
+- Retain common-invariant normalization, product square roots and exact local Hilbert-symbol evidence.
+- Add direct/basis/model/liftability checks and portable pairing-evidence benchmarks.
+
 - Construct marked binary quartics for every labelled 2-Selmer vector, including arbitrary sums.
 - Retain exact conic parametrizations, inverse charts, arithmetic labels and signed Jacobian changes.
 - Connect labelled representatives to relative descent without discarding conditional assumptions.
@@ -15,7 +19,7 @@
 - Construct the zero 2-Selmer class as multiplication by two on the original curve.
 - Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
 - Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
-- Keep version 0.4.0; the pairing and full 4-Selmer assembly remain later steps.
+- Keep version 0.4.0; global fibre equivalence and full 4-Selmer assembly remain later steps.
 
 ## 0.4.0 — All squarefree degree-four factorization types
 

@@ -17,15 +17,15 @@ remain separate milestones.
 
 ## v0.5 development
 
-The first three steps provide [marked curve interfaces](docs/marked-coverings.md),
-[certified labelled 2-Selmer arithmetic](docs/two-selmer.md), and
-[marked binary quartics for arbitrary Selmer classes](docs/selmer-quartics.md).
-`two_selmer(E)` computes the arithmetic classes and Kummer/torsion data;
-`S.quartic_cover(c)` constructs a verified quartic for any vector, including
-sums, with its original target and class label retained. The
-[eight-step plan](docs/v0.5-plan.md) records the remaining pairing and global
-4-Selmer work. The package stays **0.4.0**. The low-level relative solver still
-requires a genuine degree-four presentation; cubic conversion is explicit.
+The first four steps provide [marked curve interfaces](docs/marked-coverings.md),
+[certified labelled 2-Selmer arithmetic](docs/two-selmer.md),
+[marked quartics for arbitrary classes](docs/selmer-quartics.md), and the
+[labelled Cassels–Tate pairing and radical](docs/cassels-tate.md).
+`two_selmer(E)` computes arithmetic classes; `S.quartic_cover(c)` constructs
+representatives; `cassels_tate_pairing(S)` identifies the subspace that lifts
+to Selmer-4 using checked local evidence. The [eight-step plan](docs/v0.5-plan.md)
+records the remaining global equivalence and group-assembly work. The package
+stays **0.4.0**. A pairing and its radical are not the full 4-Selmer group.
 
 ## Install and run
 

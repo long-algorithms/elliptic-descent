@@ -171,3 +171,9 @@ def test_split_selmer_classes_by_direct_rational_enumeration():
         if evidence.status == LocalStatus.SOLUBLE: accepted.add(key(d))
     assert accepted == {key(kummer_value(E,P)) for P in rational_two_torsion(E)}
     assert len(accepted)==4
+
+def test_cubic_cover_verification_with_rational_weierstrass_coefficients():
+    # Completing the square when a3 != 0 produces nonintegral coefficients.
+    # SymPy must not infer ZZ for the ideal and then reject QQ residuals.
+    D = CubicCover((0, 0, 1, -7, 6), (1, 0, 0))
+    assert D.verify()
