@@ -4,6 +4,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/test_sage_theta_group.py'
+      - 'tests/test_sage_four_selmer_group.py'
       - 'tests/test_exponent_four.py'
       - '.github/workflows/four-selmer-group-audit.yml'
   pull_request:
@@ -11,6 +12,68 @@ permissions:
   contents: read
 jobs:
   exact-theta:
+    name: theta (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: torsion-split
+            test: test_exact_theta_representation_characters_and_rational_descent[split]
+          - name: torsion-j-zero
+            test: test_exact_theta_representation_characters_and_rational_descent[j_zero]
+          - name: torsion-generic
+            test: test_exact_theta_representation_characters_and_rational_descent[generic]
+          - name: flex-split
+            test: test_flex_trivializations_preserve_signed_markings[split]
+          - name: flex-two-quadratic
+            test: test_flex_trivializations_preserve_signed_markings[two_quadratic]
+          - name: flex-irreducible
+            test: test_flex_trivializations_preserve_signed_markings[irreducible]
+          - name: inverse
+            test: test_opposite_norm_witnesses_give_inverse_global_classes
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest 'tests/test_sage_theta_group.py::${{ matrix.test }}' -v -s --durations=15 --junitxml=theta-${{ matrix.name }}.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: theta-${{ matrix.name }}
+          path: theta-${{ matrix.name }}.xml
+  group-fixtures:
+    name: group (${{ matrix.fixture }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [rank_one, split_two_torsion, cyclic_two_torsion, cyclic_four_torsion, full_two_and_four, zero_selmer, nontrivial_sha_571a1, split_nontrivial_radical]
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest 'tests/test_sage_four_selmer_group.py::test_group_arithmetic_on_every_constructed_class[${{ matrix.fixture }}]' -v -s --durations=15 --junitxml=group-${{ matrix.fixture }}.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: four-selmer-group-${{ matrix.fixture }}
+          path: group-${{ matrix.fixture }}.xml
+  group-behaviour:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
@@ -23,9 +86,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
-      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest tests/test_sage_theta_group.py tests/test_exponent_four.py -v -s --durations=15 --junitxml=theta-tests.xml
+      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest tests/test_sage_four_selmer_group.py -k 'not group_arithmetic' -v -s --durations=15 --junitxml=group-behaviour.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: exact-theta-tests
-          path: theta-tests.xml
+          name: four-selmer-group-behaviour
+          path: group-behaviour.xml

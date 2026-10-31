@@ -21,9 +21,10 @@ def context(ainvs):
     return ThetaContext(WeierstrassModel(ainvs))
 
 
-@pytest.mark.parametrize('ainvs', [(0, 0, 0, -1, 0), (0, 0, 0, 0, 1), (0, 0, 0, -1, 1)])
+@pytest.mark.parametrize('ainvs', [(0, 0, 0, -1, 0), (0, 0, 0, 0, 1), (0, 0, 0, -1, 1)], ids=['split','j_zero','generic'])
 def test_exact_theta_representation_characters_and_rational_descent(ainvs):
     C = context(ainvs)
+    assert C.verify()
     assert len(C.points) == len(C.matrices) == len(C.characters) == 16
     assert len(set(C.characters)) == 16
     values = tuple(sage.QQbar(1) for _ in range(16))
@@ -34,6 +35,13 @@ def test_exact_theta_representation_characters_and_rational_descent(ainvs):
         witness = C.coboundary(C.characters[i])
         assert witness is not None and witness.verify(C, C.characters[i])
         assert not replace(witness, origin_value=2).verify(C, C.characters[i])
+    # A nonconstant rational function on the torsion scheme needs genuine
+    # rational interpolation, not just recognition of a Weil character.
+    shift=next(k for k in range(20) if all(z+k!=0 for z in C.nodes))
+    values=(sage.QQbar(1),)+tuple(z+shift for z in C.nodes)
+    witness=C.coboundary(values)
+    assert witness is not None and witness.verify(C,values)
+    assert not replace(witness,polynomial=(0,)*15).verify(C,values)
     with pytest.raises(ValueError): C.coboundary((0,)*16)
 
 
@@ -41,7 +49,7 @@ def test_exact_theta_representation_characters_and_rational_descent(ainvs):
     ((4, 0, -5, 0, 1), (1, 0, 0, 0)),
     ((6, 0, -5, 0, 1), (1, 0, 0, 0)),
     ((1, -1, 0, 0, 1), (0, -1, 0, 0)),
-])
+], ids=['split','two_quadratic','irreducible'])
 def test_flex_trivializations_preserve_signed_markings(f, xi):
     D = construct_four_cover(f, xi)
     marking = MarkedQuarticCover.canonical(f)

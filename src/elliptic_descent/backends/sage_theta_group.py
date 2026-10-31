@@ -362,47 +362,110 @@ class ThetaCoboundary:
 
 
 class ThetaContext:
-    """The same rational, Galois-equivariant E[4] representation for every cover."""
+    """The same rational, Galois-equivariant E[4] representation for every cover.
+
+    Two exact chord-formula matrices generate all sixteen translations. Their
+    fourth powers and commutator certify every projective multiplication law.
+    A rational resultant constructs the interpolation polynomial directly,
+    avoiding gratuitous arithmetic in the full torsion splitting field.
+    """
     def __init__(self, curve):
         sage, K = _sage(), _field()
         self.curve = curve
         self.elliptic = sage.EllipticCurve(K, [_rational(a) for a in curve.ainvs])
         self.points = _torsion_points(self.elliptic)
-        self.matrices = tuple(_translation_matrix(self.elliptic, P) for P in self.points)
-        self.addition = tuple(tuple(self.points.index(P+Q) for Q in self.points) for P in self.points)
-        characters = []
-        for i, A in enumerate(self.matrices):
-            row = []
-            for j, B in enumerate(self.matrices):
-                # The theta commutator is the perfect Weil character (up to a
-                # uniform inverse convention, irrelevant to the exhaustive test).
-                AB, BA = A*B, B*A
-                index = next(k for k, v in enumerate(BA.list()) if v)
-                scalar = AB.list()[index]/BA.list()[index]
-                if AB != scalar*BA or scalar**4 != 1:
-                    raise ArithmeticError('theta commutator is not a fourth root of unity')
-                if not _projective_equal(AB, self.matrices[self.addition[i][j]]):
-                    raise ArithmeticError('torsion matrices violate their projective group law')
-                row.append(scalar)
-            characters.append(tuple(row))
-        self.characters = tuple(characters)
+        P = next(P for P in self.points if not (2*P).is_zero())
+        for Q in self.points:
+            words = tuple(a*P+b*Q for a in range(4) for b in range(4))
+            if len(set(words)) == 16:
+                break
+        else:
+            raise ArithmeticError('no basis of the exact 4-torsion module')
+        self.generator_indices = self.points.index(P), self.points.index(Q)
+        self.coordinates = tuple(divmod(words.index(T), 4) for T in self.points)
+        self.addition = tuple(tuple(self.coordinates.index(((a+c)%4,(b+d)%4))
+                              for c,d in self.coordinates) for a,b in self.coordinates)
+        A, B = _translation_matrix(self.elliptic,P), _translation_matrix(self.elliptic,Q)
+        identity = sage.identity_matrix(K,4)
+        if not _projective_equal(A**4,identity) or not _projective_equal(B**4,identity):
+            raise ArithmeticError('theta generators do not have projective order four')
+        AB, BA = A*B, B*A
+        index = next(i for i,v in enumerate(BA.list()) if v)
+        scalar = AB.list()[index]/BA.list()[index]
+        if AB != scalar*BA or scalar*scalar != -1:
+            raise ArithmeticError('theta-generator commutator is not primitive of order four')
+        matrices = tuple(_normalized_matrix(A**a*B**b) for a,b in self.coordinates)
+        for M in matrices:
+            M.set_immutable()
+        self.matrices = matrices
+        self.characters = tuple(tuple(scalar**(a*d-b*c) for c,d in self.coordinates)
+                                for a,b in self.coordinates)
         if len(set(self.characters)) != 16:
             raise ArithmeticError('theta commutator pairing is degenerate')
-        # Rational interpolation needs only the affine fifteen torsion points.
         a1, _, a3, _, _ = self.elliptic.a_invariants()
         for shift in count():
             nodes = tuple(P[0]+shift*(P[1]+(a1*P[0]+a3)/2) for P in self.points[1:])
             if len(set(nodes)) == 15:
                 self.separating_shift, self.nodes = shift, nodes
                 break
-        R = sage.PolynomialRing(K, 'z')
+        # Derive the degree-six x-polynomial of exact-order-four points from
+        # h(x(2P))=0. The degree-twelve numerator is its square. All roots and
+        # simplicity are checked against the actual torsion points below.
+        x,z = sp.symbols('x z')
+        b2,b4,b6,_ = curve.b_invariants
+        h = x**3+(b2/4)*x*x+(b4/2)*x+b6/4
+        n = sp.expand(sp.diff(h,x)**2-4*h*(2*x+b2/4))
+        numerator = sp.Poly(n**3+(b2/4)*n*n*(4*h)+(b4/2)*n*(4*h)**2+(b6/4)*(4*h)**3,x,domain=sp.QQ)
+        q = numerator.sqf_part().monic()
+        if q.degree()!=6 or numerator.monic()!=q*q:
+            raise ArithmeticError('duplication did not give the six exact-order-four x coordinates')
+        polynomial = sp.Poly(h.subs(x,z)*sp.resultant(q.as_expr(),(z-x)**2-shift*shift*h,x),z,domain=sp.QQ).monic()
+        if polynomial.degree()!=15 or polynomial.discriminant()==0:
+            raise ArithmeticError('torsion separating polynomial has the wrong degree or repeated roots')
+        self.node_polynomial = tuple(sage.QQ(str(c)) for c in reversed(polynomial.all_coeffs()))
+        R = sage.PolynomialRing(K,'z')
+        polynomial = R(self.node_polynomial)
+        if any(polynomial(a)!=0 for a in self.nodes):
+            raise ArithmeticError('rational torsion polynomial does not vanish at the actual nodes')
         z = R.gen()
-        polynomial = sage.prod(z-a for a in self.nodes)
-        # Since the node function is rational, the vanishing polynomial MUST
-        # descend to Q. This also audits the exact torsion enumeration.
-        self.node_polynomial = tuple(sage.QQ(c) for c in polynomial.list())
         derivative = polynomial.derivative()
         self.interpolants = tuple((polynomial.quo_rem(z-a)[0]/derivative(a)).list() for a in self.nodes)
+
+    def verify(self):
+        """Recheck the actual chord actions, generators, characters and nodes."""
+        sage,K = _sage(),_field()
+        if len(self.points)!=16 or len(set(self.points))!=16 or not self.points[0].is_zero():
+            return False
+        if any(4*P!=self.elliptic(0) for P in self.points):
+            return False
+        i,j = self.generator_indices
+        A = _translation_matrix(self.elliptic,self.points[i])
+        B = _translation_matrix(self.elliptic,self.points[j])
+        if self.matrices[i]!=A or self.matrices[j]!=B:
+            return False
+        identity=sage.identity_matrix(K,4)
+        if not _projective_equal(A**4,identity) or not _projective_equal(B**4,identity):
+            return False
+        AB,BA=A*B,B*A
+        index=next(k for k,v in enumerate(BA.list()) if v)
+        scalar=AB.list()[index]/BA.list()[index]
+        if AB!=scalar*BA or scalar*scalar!=-1:
+            return False
+        if len(self.coordinates)!=16 or set(self.coordinates)!=set((a,b) for a in range(4) for b in range(4)):
+            return False
+        for T,(a,b),M,row in zip(self.points,self.coordinates,self.matrices,self.characters):
+            if T!=a*self.points[i]+b*self.points[j] or M!=_normalized_matrix(A**a*B**b):
+                return False
+            if row!=tuple(scalar**(a*d-b*c) for c,d in self.coordinates):
+                return False
+        a1,_,a3,_,_=self.elliptic.a_invariants()
+        nodes=tuple(P[0]+self.separating_shift*(P[1]+(a1*P[0]+a3)/2) for P in self.points[1:])
+        if self.nodes!=nodes or len(set(nodes))!=15:
+            return False
+        R=sage.PolynomialRing(K,'z'); polynomial=R(self.node_polynomial)
+        if polynomial.degree()!=15 or not polynomial.is_monic() or any(polynomial(a)!=0 for a in nodes):
+            return False
+        return all(R(row)(b)==int(i==j) for i,row in enumerate(self.interpolants) for j,b in enumerate(nodes))
 
     def cochain(self, trivialization):
         if trivialization.covering.target != self.curve or not trivialization.verify():
@@ -422,6 +485,19 @@ class ThetaContext:
         values = tuple(K(c) for c in values)
         if len(values) != 16 or not all(values):
             raise ValueError('a theta cochain must be a unit at every torsion point')
+        # A character times a rational constant is frequent (including every
+        # identity test). Check all these exact cases before any interpolation.
+        for index,character in enumerate(self.characters):
+            twisted=tuple(a*b for a,b in zip(values,character))
+            if all(v==twisted[0] for v in twisted):
+                try:
+                    rational=sage.QQ(twisted[0])
+                except (TypeError,ValueError):
+                    continue
+                result=ThetaCoboundary(index,rational,(rational,)+(sage.QQ(0),)*14)
+                if not result.verify(self,values):
+                    raise ArithmeticError('constant theta-cochain witness failed')
+                return result
         for index, character in enumerate(self.characters):
             twisted = tuple(a*b for a, b in zip(values, character))
             try:
