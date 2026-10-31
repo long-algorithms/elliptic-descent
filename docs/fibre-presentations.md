@@ -10,9 +10,12 @@ of the existing conic parameters, and all arithmetic labels and signed maps
 are verified by the same presentation checker.
 
 The fibre assembler chooses between these verified presentations and the default
-one, preferring fewer primes in the **full recomputed conservative support**,
-then smaller coefficients. It does not delete primes from a support set or infer
-local solubility from a small model. For `y^2=x^3-289x`, this avoids artificial
+one, switching only for strictly fewer primes in the **full recomputed
+conservative support**. Ties retain the reference presentation: smaller
+coefficients can have much worse local reduction. A regression with rational
+4-torsion demonstrates this failure of coefficient size as a tie-breaker.
+The selector does not delete primes from a support set or infer local solubility
+from a small model. For `y^2=x^3-289x`, this avoids artificial
 leading-coefficient primes such as 13 and 89. Every relative candidate and local
 condition for the selected presentation is still computed. This is a limited
 exact presentation optimization, not general minimization/reduction.
