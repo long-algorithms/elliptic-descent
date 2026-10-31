@@ -27,17 +27,15 @@ def test_supported_orientation_hypotheses(f):
 
 
 @pytest.mark.parametrize("f", [(-3, 4, -1, -3, 1), (2, 0, -3, 0, 1), (4, 0, -5, 0, 1)])
-def test_odd_factors_cannot_use_this_orientation_rule(f):
+def test_rational_root_orientation_rule_has_a_negative_norm_witness(f):
     algebra = EtaleQuarticAlgebra(f)
     linear_index = algebra.degrees.index(1)
     flip = algebra.embed_factor_unit(linear_index, (-1,))
     assert algebra.multiply(flip, flip) == algebra.one
     assert algebra.norm(flip) == -1
-    with pytest.raises(NotImplementedError):
-        orientation_certificate(algebra)
-    # Rejected before Sage import, even in the Python-only suite.
-    with pytest.raises(NotImplementedError):
-        relative_four_descent(f)
+    certificate = orientation_certificate(algebra)
+    assert certificate.verify(f) and certificate.multiplicity == 1
+    assert algebra.norm(certificate.reversing_multiplier) == -1
 
 
 @pytest.mark.parametrize("f", [(6, 0, -5, 0, 1), (16, 0, -10, 0, 1), (2, 0, 3, 0, 1)])

@@ -188,8 +188,9 @@ def test_proof_assumptions_and_explicit_settings():
         assert certified.space.arithmetic_proof == ProofStatus.CERTIFIED
 
 
-def test_rational_root_types_still_require_separate_descent_equivalences():
-    # PR2 supports two quadratic factors, not the odd-degree-factor cases.
-    for f in (FIXTURES[1], FIXTURES[3], FIXTURES[4], FIXTURES[6]):
-        with pytest.raises(NotImplementedError):
-            relative_four_descent(f)
+def test_rational_root_arithmetic_does_not_itself_claim_descent_completeness(context):
+    # Complete rational-root descents are tested separately, including their
+    # orientation evidence. A factorwise norm fibre alone is still not one.
+    assert not hasattr(context, "certified")
+    assert not hasattr(context, "coverings")
+    assert context.norm_fibre() == context.space.norm_fibre()

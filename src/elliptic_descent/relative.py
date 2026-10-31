@@ -1,8 +1,9 @@
-"""Relative 4-descent for quartics of type 4 or 2+2 over Q.
+"""Relative 4-descent for every squarefree quartic of degree four over Q.
 
 The target is a fixed quartic 2-cover, with its canonical Jacobian map.
-Equivalence fixes the target C pointwise. Both orientations of D -> C are
-retained. The un-oriented model quotient is available separately, for
+Equivalence fixes the target C pointwise. Opposite orientations are retained
+only when inequivalent; rational-root identifications carry exact witnesses.
+The un-oriented model quotient is available separately, for
 comparison with Magma. See docs/relative-descent.md for the proof obligations.
 """
 from dataclasses import dataclass, replace
@@ -71,14 +72,16 @@ class RelativeDescentResult:
 
     @property
     def coverings(self):
-        """All maps to the fixed C, including both inequivalent orientations.
+        """One representative per fixed-target covering class.
 
-        For a quartic field or a product of two quadratic fields, v^2=d in Q
-        implies N(v)=d^2. Thus c*v^2=1 implies c^2*N(v)=1: a stabilizer cannot
-        reverse r. This rule is deliberately not used for rational-root types.
+        Type 4 and 2+2 have two orientations per scalar-square class. For
+        rational-root types a verified multiplier v^2=1, N(v)=-1 identifies
+        those orientations, so returning both would double-count.
         """
         if not self.orientation.verify(self.source.f):
             raise ValueError("orientation certificate does not match the supported source")
+        if self.orientation.multiplicity == 1:
+            return self.unoriented_coverings
         return tuple(oriented for model in self.unoriented_coverings
                      for oriented in (model, replace(model, norm_witness=-model.norm_witness)))
 
@@ -101,6 +104,11 @@ class RelativeDescentResult:
                 return False
             if geometry and not D.check_construction():
                 return False
+            identification = self.orientation.identification(D)
+            if (geometry and candidate.local.status == LocalStatus.SOLUBLE
+                    and identification is not None) and not identification.verify(
+                    D, replace(D, norm_witness=-D.norm_witness)):
+                return False
             if full_geometry and not all((D.check_map_identity(), D.check_smoothness(),
                                           D.check_map_basepoint_free())):
                 return False
@@ -114,8 +122,8 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
     f: five rational coefficients, in ascending order, or QuarticTwoCover.
     No artificial limits are applied by default. Finite limits give partial
     results and NEVER turn unresolved candidates into local obstructions.
-    Type 4 and type 2+2 are supported. Rational-root/singular inputs are
-    rejected rather than labelled complete.
+    All five squarefree quartic factorization types are supported. Singular
+    inputs and degree-three presentations are rejected rather than reinterpreted.
 
     This does not compute Sel^(4)(E) or a Mordell--Weil rank. The fixed
     source may itself be locally insoluble; an empty result alone makes no

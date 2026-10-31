@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import sympy as sp
 
-from .geometry import _five, _four, _norm
+from .geometry import _five, _four, _norm, _rat
 from .status import LocalStatus
 
 
@@ -44,8 +44,12 @@ class RealSquareClassResult:
         if len(self.intervals) != len(self.signs) or len(self.intervals) != f.count_roots(-sp.oo, sp.oo):
             return False
         previous = -sp.oo
-        for (lo, hi), sign in zip(self.intervals, self.signs):
-            if not (lo.is_Rational and hi.is_Rational and previous < lo <= hi):
+        for interval, sign in zip(self.intervals, self.signs):
+            try:
+                lo, hi = (_rat(value) for value in interval)
+            except (TypeError, ValueError):
+                return False
+            if not previous < lo <= hi:
                 return False
             previous = hi
             if f.count_roots(lo, hi) != 1:
@@ -71,7 +75,12 @@ def real_squareclass_solubility(model):
             raise ValueError("quartic must be squarefree")
         while True:
             low, high = _interval_value(xi, lo, hi)
-            if previous < lo and (low > 0 or high < 0):
+            # SymPy isolates roots in open intervals: an endpoint can itself
+            # be a different (rational) root. Close and separate each interval
+            # before storing it, or a following singleton cannot be separated.
+            closed_isolation = (lo == hi or
+                                (polynomial.eval(lo) != 0 and polynomial.eval(hi) != 0))
+            if previous < lo and closed_isolation and (low > 0 or high < 0):
                 break
             if lo == hi:
                 raise ArithmeticError("inconsistent root isolation or nonunit xi")
