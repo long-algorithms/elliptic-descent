@@ -25,15 +25,24 @@ def main():
         p.error("--repeats must be positive")
     for name, (f, xi) in FIXTURES.items():
         durations = []
+        verify_durations = []
         for _ in range(args.repeats):
             start = time.perf_counter_ns()
             D = construct_four_cover(f, xi)
-            if args.verify:
-                assert D.check_algebra()
             durations.append((time.perf_counter_ns() - start) / 1e6)
+            if args.verify:
+                verification_start = time.perf_counter_ns()
+                assert D.check_algebra()
+                assert D.check_map_identity()
+                assert D.check_smoothness()
+                assert D.check_map_basepoint_free()
+                verify_durations.append((time.perf_counter_ns() - verification_start) / 1e6)
         print(json.dumps({
             "fixture": name, "repeats": args.repeats, "verified": args.verify,
+            "verification": "algebra,map_identity,smoothness,map_basepoint_free" if args.verify else "none",
             "median_ms": statistics.median(durations), "samples_ms": durations,
+            "verification_median_ms": (statistics.median(verify_durations) if args.verify else None),
+            "verification_samples_ms": verify_durations,
             "python": platform.python_version(), "sympy": sp.__version__,
             "machine": platform.machine(),
         }, sort_keys=True))

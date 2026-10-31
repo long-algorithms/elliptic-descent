@@ -9,6 +9,7 @@ is everywhere locally soluble.  All coordinates use ascending powers of theta.
 """
 
 from dataclasses import dataclass
+from itertools import combinations
 from math import isqrt
 from typing import Sequence
 
@@ -130,6 +131,44 @@ class FourCoverCandidate:
         direct = sp.expand(_norm(linear, self.f))
         formula = sp.expand(sum(self.f[i] * (-a)**i * b**(4 - i) for i in range(5)) / self.f[4])
         return sp.expand(direct - formula) == 0
+
+    def check_smoothness(self):
+        """Certify smoothness over Qbar via the projective Jacobian criterion.
+
+        The singular locus of an intersection of two quadrics is cut out
+        by the quadrics and all 2x2 minors of their 2x4 Jacobian.
+        Exhaustively test the four standard projective affine charts using
+        exact Groebner bases over Q.  This is deliberately an audit routine,
+        not the fastest method for a large-coefficient pencil.
+        """
+        jac = sp.Matrix(2, 4, lambda i, j: sp.diff(self.quadrics[i], U[j]))
+        minors = tuple(sp.expand(jac[0, i]*jac[1, j] - jac[0, j]*jac[1, i])
+                       for i, j in combinations(range(4), 2))
+        for k in range(4):
+            coordinates = U[:k] + U[k+1:]
+            specialization = {U[k]: sp.Integer(1)}
+            equations = tuple(sp.expand(q.subs(specialization))
+                              for q in (*self.quadrics, *minors))
+            ideal = sp.groebner(equations, *coordinates, order="grevlex")
+            if sp.expand(ideal.reduce(sp.Integer(1))[1]) != 0:
+                return False
+        return True
+
+    def check_map_basepoint_free(self):
+        """Certify the coordinate map has no projective common zero on D.
+
+        It suffices to test q0=q1=q2=q3=0, because the map has
+        X=-q0 and Z=q1.  This checks all four projective charts over
+        the algebraic closure, not merely over Q-rational points.
+        """
+        for k in range(4):
+            coordinates = U[:k] + U[k+1:]
+            specialization = {U[k]: sp.Integer(1)}
+            equations = tuple(sp.expand(q.subs(specialization)) for q in self.q)
+            ideal = sp.groebner(equations, *coordinates, order="grevlex")
+            if sp.expand(ideal.reduce(sp.Integer(1))[1]) != 0:
+                return False
+        return True
 
     def check_map_identity(self):
         """Verify Y^2-F(X,Z) vanishes modulo the ideal (q2,q3).
