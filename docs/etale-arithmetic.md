@@ -1,5 +1,9 @@
 # Quartic etale arithmetic: v0.4 preparation, PR 1
 
+**Update:** the subsequent [two-quadratic descent step](two-quadratic-descent.md)
+now integrates this backend for type `(2,2)`. The original PR1 scope and tests
+are described below; rational-root types still lack a complete descent API.
+
 This change supplies the arithmetic foundation for all five squarefree quartic
 factorization patterns. It does **not** extend `relative_four_descent` to
 reducible quartics, decide orientation equivalences, or complete v0.4.

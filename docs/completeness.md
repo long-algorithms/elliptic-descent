@@ -4,6 +4,9 @@ This is the project specification and release-gate checklist. **v0.3 implements
 complete relative 4-descent for smooth irreducible quartics over Q**, with the
 canonical marking and fixed-target equivalence documented in
 [relative-descent.md](relative-descent.md). See [v0.3 acceptance](v0.3.md).
+The subsequent [two-quadratic step](two-quadratic-descent.md) extends the
+complete API to factorization type `(2,2)`. The v0.4 release is not yet complete:
+the three rational-root patterns still require their own equivalence handling.
 Full curve-level 4-Selmer-group computation is a separate, future gate.
 
 ## Objects, levels, and equivalence

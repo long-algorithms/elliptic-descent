@@ -6,7 +6,9 @@ orientation and local steps described in [relative-descent.md](relative-descent.
 
 The additive [quartic etale backend](etale-arithmetic.md) now supplies CRT maps
 and factorwise square classes for reducible quartics as v0.4 groundwork. It does
-not change the irreducible-only contract of the complete relative-descent API.
+not by itself imply descent completeness. The subsequent
+[two-quadratic step](two-quadratic-descent.md) integrates type `(2,2)` into the
+complete API; rational-root cases are still unsupported.
 
 ## What is computed
 
