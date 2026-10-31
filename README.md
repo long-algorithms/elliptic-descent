@@ -11,9 +11,20 @@ up to the fixed-target equivalence specified below. Complete mode has no
 artificial candidate or local-search cutoff.
 
 This is **not** a full curve-level 4-Selmer-group computation, a Mordell–Weil
-rank algorithm, or a performance match for Magma. Degree-three input conversion,
+rank algorithm, or a performance match for Magma. Automatic recovery of imported markings,
 full Selmer-group assembly, minimization/reduction, and practical point search
 remain separate milestones.
+
+## v0.5 development
+
+The first step adds [marked curve and covering interfaces](docs/marked-coverings.md):
+exact Weierstrass changes and target translations, explicit cubic-to-quartic
+conversion, and a quartic presentation of the zero 2-Selmer class. Maps remain
+attached to the user's original curve, including after normalization and
+relative descent. The [eight-step v0.5 plan](docs/v0.5-plan.md) records the
+remaining work. The package stays **0.4.0**; full curve-level Selmer assembly
+is not implemented by these interfaces. The low-level quartic API still expects
+a genuine degree-four input; cubic conversion is explicit rather than implicit.
 
 ## Install and run
 
@@ -104,7 +115,9 @@ insufficient; failure to verify is not a proof of solubility.
 The earlier bounded routines remain available as independent reference paths.
 They are not silently relabelled complete. The geometric constructor handles
 all squarefree degree-four quartics, and **relative descent** now supports
-all five factorization patterns. Degree-three and singular inputs are rejected. Large-prime
+all five factorization patterns. The low-level API rejects degree-three inputs;
+use the explicit `CubicToQuartic` adapter for those presentations. Singular
+inputs remain rejected. Large-prime
 certification uses Sage/PARI rather than accepting probable primes. Runtime and memory can still be substantial on difficult inputs.
 
 ## Tests and benchmarks

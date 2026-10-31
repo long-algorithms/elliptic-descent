@@ -10,6 +10,9 @@ from .relative import relative_four_descent, RelativeDescentResult
 from .two_cover import QuarticTwoCover
 from .rational_root import RationalRootIdentification
 from .local_complete import padic_solubility_complete
+from .weierstrass import WeierstrassModel, WeierstrassChange
+from .cubic_conversion import CubicToQuartic, IdentityTwoCover
+from .marked_cover import MarkedQuarticCover, MarkedFourCover, MarkedRelativeResult
 
 __all__ = [
     "EtaleQuarticAlgebra", "FourCoverCandidate", "construct_four_cover", "CandidateDecision",
@@ -19,5 +22,7 @@ __all__ = [
     "real_solubility", "everywhere_local_solubility",
     "relative_four_descent", "RelativeDescentResult", "QuarticTwoCover",
     "padic_solubility_complete", "RationalRootIdentification",
+    "WeierstrassModel", "WeierstrassChange", "CubicToQuartic", "IdentityTwoCover",
+    "MarkedQuarticCover", "MarkedFourCover", "MarkedRelativeResult",
 ]
 __version__ = "0.4.0"
