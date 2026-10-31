@@ -128,3 +128,87 @@ def test_two_cover_and_orientations():
 def test_canonical_map_identities(f):
     C=QuarticTwoCover(f)
     assert C.check_map()
+
+
+def test_unknown_local_screen_is_not_a_verified_global_decision():
+    D = construct_four_cover((1, -1, 0, 0, 1), (0, -1, 0, 0))
+    screen = complete_local_screen(D, max_nodes=0)
+    assert screen.status == LocalStatus.UNKNOWN
+    assert not screen.verify(D)
+
+
+def test_construction_certificate_against_generic_geometric_audit():
+    for f,xi in [((1,-1,0,0,1),(0,-1,0,0)), ((4,0,-5,0,1),(1,0,0,0))]:
+        D=construct_four_cover(f,xi)
+        assert D.check_construction()
+        assert D.check_map_identity() and D.check_smoothness() and D.check_map_basepoint_free()
+        assert not replace(D,norm_u=D.norm_u+U[0]**4).check_construction()
+        assert not replace(D,q=(D.q[0]+U[0]**2,*D.q[1:])).check_construction()
+
+
+def test_scalar_square_equivalence_preserves_the_oriented_map():
+    from elliptic_descent.geometry import _mul, _norm
+    f = tuple(map(sp.Rational, (1,-1,0,0,1)))
+    xi = tuple(map(sp.Rational, (0,-1,0,0)))
+    v = tuple(map(sp.Rational, (1,1,0,0)))
+    scalar = sp.Rational(-2)
+    D = construct_four_cover(f,xi)
+    transformed_xi = tuple(scalar*c for c in _mul(_mul(v,v,f),xi,f))
+    transformed = construct_four_cover(f,transformed_xi,
+                                      norm_witness=scalar**2*_norm(v,f)*D.norm_witness)
+    old_coordinates = _mul(v,tuple(U),f)
+    substitutions = dict(zip(U,old_coordinates))
+    for actual,original in zip(transformed.q,D.q):
+        assert sp.expand(actual-scalar*original.subs(substitutions,simultaneous=True))==0
+    for actual,original,weight in zip(transformed.map_xyz,D.map_xyz,(1,2,1)):
+        assert sp.expand(actual-scalar**weight*original.subs(substitutions,simultaneous=True))==0
+    assert transformed.check_construction()
+
+
+def test_integral_model_change_and_certificate_transport():
+    from elliptic_descent.local_models import improve_integral_model
+    D=construct_four_cover((1,-1,0,0,1),(-8,5,3,16))
+    change=improve_integral_model(D,229)
+    assert change.steps and change.verify(D)
+    forged=replace(change,coordinate_matrix=((0,0,0,0),)*4)
+    assert not forged.verify(D)
+    result=padic_solubility_complete(D,229)
+    assert result.status==LocalStatus.SOLUBLE and result.nodes < 20 and result.verify(D)
+    forged_result=replace(result,certificate=replace(result.certificate,change=forged))
+    assert not forged_result.verify(D)
+    assert not replace(result,status=LocalStatus.INSOLUBLE).verify(D)
+
+
+def test_independent_negative_tree_verification():
+    from elliptic_descent.local_certificates import verify_empty_residue_tree
+    # A published 571a1 model, expressed using a Sage-exported norm candidate.
+    D=construct_four_cover((-7,-68,-142,112,-19),(996,4409,-3174,532))
+    result=padic_solubility_complete(D,19)
+    assert result.status==LocalStatus.INSOLUBLE and result.nodes < 100
+    # Direct P^3(Z/19^2) would require almost fifty million residues.
+    assert result.verify(D,max_nodes=20_000)
+    assert not result.verify(D,max_nodes=10)
+    inner=result.certificate.inner
+    target=result.certificate.change.target
+    assert not verify_empty_residue_tree(target,19,1,20_000)
+    forged=replace(result,certificate=replace(result.certificate,
+                    inner=replace(inner,certificate=replace(inner.certificate,depth=1))))
+    assert not forged.verify(D)
+    u,v,w,z=U
+    Q=(u*u+v*v+w*w+z*z,u*u+2*v*v+3*w*w+4*z*z)
+    system=QuadraticSystem.from_quadrics(Q)
+    for p in (2,3,5):
+        for depth in (1,2,3):
+            verdict=verify_empty_residue_tree(system,p,depth,100_000)
+            # At p=2 the first obstruction is mod 4; at the odd primes Q is soluble.
+            assert verdict == (p==2 and depth >= 2)
+
+
+def test_singular_bounded_inputs_do_not_enter_minimization_cycles():
+    from elliptic_descent.local_models import improve_integral_model
+    u,v,w,z=U
+    Q=(u*u,v*v)
+    with pytest.raises(NotImplementedError):
+        improve_integral_model(Q,2)
+    result=padic_solubility_complete(Q,2,max_depth=3,max_nodes=100)
+    assert result.status==LocalStatus.SOLUBLE and result.verify(Q)

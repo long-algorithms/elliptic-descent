@@ -47,7 +47,7 @@ def test_rational_square_classes(x):
     assert square_class(x*x, (2, 3)) == 0
 
 
-def test_square_class_validation():
+def test_square_class_validation(monkeypatch):
     assert square_class(-6, (2, 3)) == 7
     assert square_class(sp.Rational(2, 3), (2, 3)) == 6
     for x in (0, 5):
@@ -57,8 +57,14 @@ def test_square_class_validation():
         square_class(1.0, (2,))
     with pytest.raises(ValueError):
         square_class(1, (2, 2))
-    with pytest.raises(NotImplementedError):
-        prime(2**64+13)
+    # Exercise the explicit missing-backend path even inside the Sage job.
+    import sys
+    from elliptic_descent.arithmetic import _proven_prime
+    _proven_prime.cache_clear()
+    with monkeypatch.context() as m:
+        m.setitem(sys.modules, "sage.all", None)
+        with pytest.raises(NotImplementedError):
+            prime(2**64+13)
     with pytest.raises(ValueError):
         prime(9)
 

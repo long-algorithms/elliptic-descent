@@ -223,8 +223,9 @@ def real_solubility(quadrics, *, point=None, pencil_bound=3):
 def verify_local_result(quadrics, result, *, max_nodes=1_000_000):
     """Check witnesses; negative finite-place evidence uses independent enumeration.
 
-    For empty_modulus this directly enumerates P^3(Z/p^k), rather than calling
-    the lifting routine. Insufficient verifier budget returns False, not proof.
+    For empty_modulus, directly enumerate P^3(Z/p^k) when affordable, or use
+    the independent residue-tree checker (direct F_p enumeration and rank tests).
+    Neither route calls the solver. A budget failure returns False, not proof.
     """
     system = QuadraticSystem.from_quadrics(quadrics)
     c = result.certificate
@@ -265,7 +266,8 @@ def verify_local_result(quadrics, result, *, max_nodes=1_000_000):
     # The independent checker is exhaustive; reject over-budget certificates
     # before materializing any residue ranges.
     if p**(3*(c.depth-1))*(p**3+p**2+p+1) > max_nodes:
-        return False
+        from .local_certificates import verify_empty_residue_tree
+        return verify_empty_residue_tree(system,p,c.depth,max_nodes)
     nodes = 0
     for pivot in range(4):
         ranges = [range(0, modulus, p) if i < pivot else range(modulus)

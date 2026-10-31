@@ -51,12 +51,8 @@ def test_published_relative_descents(name, f, expected_models):
     assert result.certified, description(result)
     assert len(result.unoriented_coverings) == expected_models, description(result)
     assert len(result.coverings) == 2*expected_models
-    for c in result.candidates:
-        assert c.local.real.verify(c.model)
-        for report in c.local.finite:
-            # Cheap positive checks are independent of the search.
-            if report.status == LocalStatus.SOLUBLE:
-                assert report.verify(c.model)
+    # Includes independent negative-certificate checks, not just point witnesses.
+    assert result.verify_evidence(max_nodes=1_000_000), description(result)
 
 
 def test_relative_conditional_status():
@@ -67,3 +63,31 @@ def test_relative_conditional_status():
 def test_relative_reducible_is_not_an_empty_descent():
     with pytest.raises(NotImplementedError):
         relative_four_descent((4,0,-5,0,1))
+
+
+def test_large_prime_certification_has_no_64_bit_cutoff():
+    from elliptic_descent.arithmetic import prime, prime_support
+    p = 2**89 - 1
+    assert prime(p) == p
+    assert prime_support((p*p,)) == (p,)
+    with pytest.raises(ValueError):
+        prime(3*p)
+
+
+def test_irreducible_quartic_with_rational_two_torsion_jacobian():
+    # Q(theta), theta^4=-1, contains several quadratic subfields. Both -1 and
+    # 2 are squares in the field, so blindly subtracting |S|+1 dimensions is wrong.
+    result=relative_four_descent((1,0,0,0,1))
+    assert result.certified and len(result.scalar_basis)==0
+    assert result.total_model_classes==4
+    assert len(result.unoriented_coverings)==2 and len(result.coverings)==4
+    assert result.source.ainvs==(0,0,0,-4,0)
+    assert result.verify_evidence()
+
+
+def test_square_rescaling_preserves_the_relative_answer():
+    base=relative_four_descent((1,-1,0,0,1))
+    scaled=relative_four_descent((4,-4,0,0,4))
+    assert base.certified and scaled.certified
+    assert len(base.coverings)==len(scaled.coverings)
+    assert scaled.verify_evidence()

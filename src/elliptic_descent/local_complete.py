@@ -14,6 +14,7 @@ from .geometry import U
 from .local import (LocalCertificate, LocalResult, MONOMIALS, QuadraticSystem,
                     _digits, _hensel, bad_primes)
 from .real import real_squareclass_solubility
+from .local_models import improve_integral_model, transport_local_result
 from .status import LocalStatus
 
 
@@ -158,7 +159,7 @@ def _next_solutions(system, frontier, modulus, p, budget):
 
 
 def padic_solubility_complete(quadrics, p, *, max_depth=None, max_nodes=None,
-                              _smooth_checked=False):
+                              _smooth_checked=False, _model_improved=False):
     """Decide Q_p-solubility of a smooth intersection, or return bounded unknown.
 
     Node counts are algebraic search work units, not all primitive residues.
@@ -170,6 +171,17 @@ def padic_solubility_complete(quadrics, p, *, max_depth=None, max_nodes=None,
     max_nodes = None if max_nodes is None else nonnegative_integer(max_nodes, "max_nodes")
     if not _smooth_checked and max_depth is None and max_nodes is None:
         bad_primes(system)  # Nonzero determinant discriminant implies smoothness.
+        _smooth_checked = True
+    if not _model_improved and max_depth != 0 and max_nodes != 0:
+        try:
+            change = improve_integral_model(system,p,_smooth_checked=_smooth_checked)
+        except NotImplementedError:
+            change = None  # Bounded searches can also examine singular test models.
+        if change is not None and change.steps:
+            report = padic_solubility_complete(change.target,p,max_depth=max_depth,
+                                               max_nodes=max_nodes,_smooth_checked=True,
+                                               _model_improved=True)
+            return transport_local_result(system,change,report)
     budget = _Budget(max_nodes)
     frontier, modulus, depth = [], 1, 0
     try:
@@ -215,7 +227,7 @@ class CompleteLocalScreen:
         return LocalStatus.UNKNOWN
 
     def verify(self, model, *, max_nodes=1_000_000):
-        if not self.real.verify(model):
+        if self.status == LocalStatus.UNKNOWN or not self.real.verify(model):
             return False
         if self.real.status == LocalStatus.INSOLUBLE:
             return self.status == LocalStatus.INSOLUBLE

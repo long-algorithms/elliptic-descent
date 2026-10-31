@@ -74,20 +74,22 @@ class RelativeDescentResult:
     def scope(self):
         return "relative 2-coverings of the fixed quartic; no target automorphisms quotiented"
 
-    def verify_evidence(self, *, max_nodes=1_000_000, geometry=True):
+    def verify_evidence(self, *, max_nodes=1_000_000, geometry=True, full_geometry=False):
         """Check model/map/local evidence, not independently redo class groups.
 
         Arithmetic completeness is a trusted certified Sage dependency. False
         can mean the independent local verifier's resource budget was too small.
         """
-        if not self.source.check_map():
+        if not self.complete or not self.source.check_map():
             return False
         for candidate in self.candidates:
             D = candidate.model
             if D.f != self.source.f or not candidate.local.verify(D, max_nodes=max_nodes):
                 return False
-            if geometry and not all((D.check_algebra(), D.check_map_identity(),
-                                      D.check_smoothness(), D.check_map_basepoint_free())):
+            if geometry and not D.check_construction():
+                return False
+            if full_geometry and not all((D.check_map_identity(), D.check_smoothness(),
+                                          D.check_map_basepoint_free())):
                 return False
         return True
 
@@ -136,8 +138,7 @@ def relative_four_descent(f, *, proof=True, max_candidates=None,
         if context.coordinates(xi) != label:
             raise ArithmeticError("number-field coordinate verification failed")
         model = construct_four_cover(space.f, xi, norm_witness=witness)
-        if verify_geometry and not all((model.check_algebra(), model.check_map_identity(),
-                                         model.check_smoothness(), model.check_map_basepoint_free())):
+        if verify_geometry and not model.check_construction():
             raise ArithmeticError("covering geometry verification failed")
         local = complete_local_screen(model, max_depth=max_depth, max_nodes=max_nodes)
         candidates.append(RelativeCandidate(label, model, local))

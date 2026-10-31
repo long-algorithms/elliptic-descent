@@ -5,6 +5,7 @@ quotients, orientations and covering equivalence remain separate obligations.
 See docs/arithmetic.md and Fisher (2008), Section 2.
 """
 from dataclasses import dataclass
+from functools import lru_cache
 from itertools import islice
 from math import isqrt
 
@@ -22,11 +23,26 @@ def nonnegative_integer(value, name):
 
 
 def prime(value):
-    """Deterministically validated prime; >64-bit primes are unsupported here."""
-    p = nonnegative_integer(value, "prime")
-    if p >= 2**64:
-        raise NotImplementedError("reference backend supports primes below 2**64")
-    if not sp.isprime(p):
+    """Prove primality; large primes use Sage/PARI with proof=True.
+
+    Pure-Python use is supported below 2**64. The complete descent already
+    requires Sage, so it has no prime-size restriction. Failed certification
+    raises instead of treating a probable prime as a proven prime.
+    """
+    return _proven_prime(nonnegative_integer(value, "prime"))
+
+
+@lru_cache(maxsize=2048)
+def _proven_prime(p):
+    if p < 2**64:
+        valid = sp.isprime(p)
+    else:
+        try:
+            from sage.all import ZZ
+        except ImportError as error:
+            raise NotImplementedError("primality proofs above 64 bits require SageMath") from error
+        valid = ZZ(p).is_prime(proof=True)
+    if not valid:
         raise ValueError("expected a prime")
     return p
 
