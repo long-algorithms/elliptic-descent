@@ -16,6 +16,7 @@ from .backends.sage_fibres import oriented_class_matcher
 from .cassels_tate import cassels_tate_pairing
 from .equivalence import ScalarSquareEquivalence
 from .fibre_actions import quartic_deck_action, FibreEquivalence, zero_fibre_kummer
+from .fibre_presentations import fibre_representative
 from .quotient import normal_form, quotient_fibre
 from .two_selmer import F2Labels
 
@@ -405,7 +406,7 @@ def assemble_four_selmer_fibres(selmer, pairing=None, *, proof=True, prune=True,
     if max_fibres is not None:
         chosen = islice(chosen,max_fibres)
     start = perf_counter()
-    fibres = tuple(_assemble_one(selmer.quartic_cover(c),torsion,c in image,
+    fibres = tuple(_assemble_one(fibre_representative(selmer,c,torsion),torsion,c in image,
                                 proof=proof,relative_limits=limits,reuse_zero_fibre=reuse_zero_fibre) for c in chosen)
     result = FourSelmerFibres(selmer,B,torsion,fibres,exclusions,prune,
              (('pairing_and_torsion_seconds',preparation_seconds),('fibre_assembly_seconds',perf_counter()-start)))
