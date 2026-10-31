@@ -17,15 +17,15 @@ remain separate milestones.
 
 ## v0.5 development
 
-The first two steps add [marked curve/covering interfaces](docs/marked-coverings.md)
-and [certified labelled 2-Selmer arithmetic](docs/two-selmer.md). `two_selmer(E)`
-computes an explicit cubic-algebra Selmer basis, coordinate/basis/model maps,
-and Kummer images with rational 2-/4-torsion bookkeeping. It uses an exhaustive
-certified norm-kernel calculation, not guessed labels on an imported cover list.
-The [eight-step plan](docs/v0.5-plan.md) records the remaining work, including
-binary-quartic representatives and full 4-Selmer assembly. The package stays
-**0.4.0**. The low-level relative solver still expects a genuine degree-four
-input; cubic presentation conversion is explicit through its separate adapter.
+The first three steps provide [marked curve interfaces](docs/marked-coverings.md),
+[certified labelled 2-Selmer arithmetic](docs/two-selmer.md), and
+[marked binary quartics for arbitrary Selmer classes](docs/selmer-quartics.md).
+`two_selmer(E)` computes the arithmetic classes and Kummer/torsion data;
+`S.quartic_cover(c)` constructs a verified quartic for any vector, including
+sums, with its original target and class label retained. The
+[eight-step plan](docs/v0.5-plan.md) records the remaining pairing and global
+4-Selmer work. The package stays **0.4.0**. The low-level relative solver still
+requires a genuine degree-four presentation; cubic conversion is explicit.
 
 ## Install and run
 

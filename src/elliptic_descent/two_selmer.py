@@ -219,6 +219,17 @@ class TwoSelmerResult:
         """Cubic-algebra representative, NOT a binary-quartic covering model."""
         return self.arithmetic.representative(self.ambient_label(coordinates))
 
+    def quartic_cover(self, coordinates, *, conic_point=None, parameter_change=None):
+        """A marked binary quartic for any vector in this complete Selmer basis.
+
+        representative() continues to return an arithmetic cubic-algebra element.
+        This method retains the class label, inverse presentation maps and original
+        elliptic target. It does not assemble the global 4-Selmer group.
+        """
+        from .selmer_quartic import labelled_quartic
+        return labelled_quartic(self, coordinates, conic_point=conic_point,
+                                parameter_change=parameter_change)
+
     def add(self, left, right):
         labels = self.labelling
         labels.ambient(left)

@@ -52,6 +52,7 @@ jobs:
       - run: /home/sage/sage/sage -python benchmarks/release_audit.py > release-audit.json
       - run: /home/sage/sage/sage -python benchmarks/marked_models.py --sage --repeats 1 --verify > marked-models-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/two_selmer.py --verify > two-selmer-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/selmer_quartics.py --verify > selmer-quartics-results.jsonl
       - uses: actions/upload-artifact@v4
         with:
           name: descent-sage-10.6
@@ -64,3 +65,4 @@ jobs:
             release-audit.json
             marked-models-results.jsonl
             two-selmer-results.jsonl
+            selmer-quartics-results.jsonl

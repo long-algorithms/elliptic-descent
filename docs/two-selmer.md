@@ -4,7 +4,8 @@ The package remains **0.4.0**. `two_selmer(E)` computes the full 2-Selmer group
 of a rational elliptic curve in explicit cubic-algebra coordinates, together
 with Kummer maps and rational 2-/4-torsion data. It does **not** compute the
 4-Selmer group, its fibres, a Cassels--Tate pairing, or a Mordell--Weil basis.
-Binary-quartic representatives and their marked maps are the next planned step.
+[Binary-quartic representatives with their marked maps](selmer-quartics.md)
+are now available as the subsequent development step.
 
 This is a direct reference implementation, not an adapter which attaches
 arbitrary bit labels to PARI's `ell2cover` output. It uses Sage for certified
@@ -263,11 +264,11 @@ and the implementation is not formally verified or externally mathematically
 reviewed. eclib tests compare cardinalities, not a class-by-class correspondence.
 No live Magma comparison or performance superiority is claimed.
 
-Next, step 3 must convert arbitrary labelled classes to explicit binary quartics
-with verified maps and labels, preserving the arithmetic group law. The auxiliary
-quadric models already computed here may be reused, but their conversion is not
-being declared complete by this PR. Pairings, global 4-Selmer assembly and exact
-Mordell--Weil rank/saturation remain later work.
+The subsequent [step 3 interface](selmer-quartics.md) now converts arbitrary
+labelled classes to marked binary quartics via the auxiliary conic, preserving
+the arithmetic label and original target. This does not turn a class list into
+a global 4-Selmer group. Pairings, global assembly and exact Mordell--Weil
+rank/saturation remain later work.
 
 ## Primary references
 

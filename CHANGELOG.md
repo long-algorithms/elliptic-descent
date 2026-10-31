@@ -2,6 +2,10 @@
 
 ## Unreleased — v0.5 development
 
+- Construct marked binary quartics for every labelled 2-Selmer vector, including arbitrary sums.
+- Retain exact conic parametrizations, inverse charts, arithmetic labels and signed Jacobian changes.
+- Connect labelled representatives to relative descent without discarding conditional assumptions.
+
 - Compute labelled 2-Selmer spaces using the certified cubic norm kernel and exact local decisions.
 - Add arithmetic representatives, basis/model transport, Kummer maps, torsion kernels and exhaustive rational halving.
 - Retain explicit partial/conditional outcomes and independent eclib/count and class-coordinate tests.
@@ -11,7 +15,7 @@
 - Construct the zero 2-Selmer class as multiplication by two on the original curve.
 - Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
 - Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
-- Keep version 0.4.0; full 4-Selmer assembly and binary-quartic representatives of labelled classes remain later steps.
+- Keep version 0.4.0; the pairing and full 4-Selmer assembly remain later steps.
 
 ## 0.4.0 — All squarefree degree-four factorization types
 
