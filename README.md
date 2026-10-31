@@ -17,14 +17,15 @@ remain separate milestones.
 
 ## v0.5 development
 
-The first step adds [marked curve and covering interfaces](docs/marked-coverings.md):
-exact Weierstrass changes and target translations, explicit cubic-to-quartic
-conversion, and a quartic presentation of the zero 2-Selmer class. Maps remain
-attached to the user's original curve, including after normalization and
-relative descent. The [eight-step v0.5 plan](docs/v0.5-plan.md) records the
-remaining work. The package stays **0.4.0**; full curve-level Selmer assembly
-is not implemented by these interfaces. The low-level quartic API still expects
-a genuine degree-four input; cubic conversion is explicit rather than implicit.
+The first two steps add [marked curve/covering interfaces](docs/marked-coverings.md)
+and [certified labelled 2-Selmer arithmetic](docs/two-selmer.md). `two_selmer(E)`
+computes an explicit cubic-algebra Selmer basis, coordinate/basis/model maps,
+and Kummer images with rational 2-/4-torsion bookkeeping. It uses an exhaustive
+certified norm-kernel calculation, not guessed labels on an imported cover list.
+The [eight-step plan](docs/v0.5-plan.md) records the remaining work, including
+binary-quartic representatives and full 4-Selmer assembly. The package stays
+**0.4.0**. The low-level relative solver still expects a genuine degree-four
+input; cubic presentation conversion is explicit through its separate adapter.
 
 ## Install and run
 

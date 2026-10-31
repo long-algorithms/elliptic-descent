@@ -15,6 +15,7 @@ from .local import (LocalCertificate, LocalResult, MONOMIALS, QuadraticSystem,
                     _digits, _hensel, bad_primes)
 from .real import real_squareclass_solubility
 from .local_models import improve_integral_model, transport_local_result
+from .local_obstructions import radical_plane_obstruction
 from .status import LocalStatus
 
 
@@ -183,6 +184,10 @@ def padic_solubility_complete(quadrics, p, *, max_depth=None, max_nodes=None,
                                                max_nodes=max_nodes,_smooth_checked=True,
                                                _model_improved=True)
             return transport_local_result(system,change,report)
+    if (max_depth is None or max_depth >= 2) and (max_nodes is None or max_nodes > 0):
+        obstruction = radical_plane_obstruction(system, p)
+        if obstruction is not None:
+            return obstruction
     budget = _Budget(max_nodes)
     frontier, modulus, depth = [], 1, 0
     try:
