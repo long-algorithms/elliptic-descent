@@ -169,3 +169,23 @@ def test_seeded_nonminimal_general_weierstrass_markings():
         C=quartic_presentation(D,conic_point=(1,0,0))
         assert C.verify() and C.to_working.target==target
         assert C.to_working.target.ainvs[0:3] == target.ainvs[0:3]
+
+
+@pytest.mark.parametrize('which,point', [
+    (1,(527,-4,-2)),
+    (2,(sp.Rational(-27919,15),-56,3)),
+    (3,(sp.Rational(-898,13),-4,0)),
+])
+def test_571a1_conic_certificates_without_a_genus_one_point_search(which,point):
+    # Arithmetic representatives from the preceding verified 2-Selmer corpus.
+    # This independently checks supplied conic witnesses without importing Sage;
+    # Selmer completeness remains the separate arithmetic backend's obligation.
+    E=WeierstrassModel((0,-1,1,-929,-10595))
+    d1=(-9827,-292,16)
+    d2=(-36815,-1096,60)
+    A=CubicCover(E,d1).algebra
+    delta=d1 if which==1 else d2 if which==2 else A.multiply(d1,d2)
+    D=CubicCover(E,delta)
+    C=quartic_presentation(D,conic_point=point)
+    assert C.verify() and C.to_working.target==E
+    assert C.quartic.f[4] and C.marking.verify_supplied_map(C.map_working_xy)

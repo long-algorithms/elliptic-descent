@@ -125,13 +125,14 @@ def test_tampered_labels_models_and_partial_inputs_are_rejected():
 
 
 def test_relative_integration_keeps_the_label_marking_and_assumptions():
-    C=cover((0,0,0,-1,1),0)
-    result=C.descend(proof=True)
-    assert result.complete and result.certified and result.verify_evidence()
-    assert result.target==C.target
-    assert result.representative.ambient_label==0
-    assert len(result.coverings)==selmer((0,0,0,-1,1)).cardinality
-    assert all(D.target==C.target and D.verify() for D in result.coverings)
+    for c in (0,1):
+        C=cover((0,0,0,-1,1),c)
+        result=C.descend(proof=True)
+        assert result.complete and result.certified and result.verify_evidence()
+        assert result.target==C.target
+        assert result.representative.ambient_label==C.ambient_label
+        assert len(result.coverings)==selmer((0,0,0,-1,1)).cardinality
+        assert all(D.target==C.target and D.verify() for D in result.coverings)
     partial=C.descend(max_candidates=0)
     assert not partial.complete and not partial.certified
     assert not partial.verify_evidence()
