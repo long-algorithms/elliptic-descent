@@ -51,6 +51,7 @@ jobs:
       - run: /home/sage/sage/sage -python benchmarks/rational_root.py --verify --repeats 1 > rational-root-results.jsonl
       - run: /home/sage/sage/sage -python benchmarks/release_audit.py > release-audit.json
       - run: /home/sage/sage/sage -python benchmarks/marked_models.py --sage --repeats 1 --verify > marked-models-results.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/two_selmer.py --verify > two-selmer-results.jsonl
       - uses: actions/upload-artifact@v4
         with:
           name: descent-sage-10.6
@@ -62,3 +63,4 @@ jobs:
             rational-root-results.jsonl
             release-audit.json
             marked-models-results.jsonl
+            two-selmer-results.jsonl

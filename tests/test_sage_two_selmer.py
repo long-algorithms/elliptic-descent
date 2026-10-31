@@ -163,3 +163,18 @@ def test_factorwise_norm_kernel_is_not_quotiented_by_rational_scalars():
         assert arithmetic.coordinates(arithmetic.representative(0)) == 0
         for i,g in enumerate(arithmetic.generators):
             assert arithmetic.coordinates(g) == 1<<i
+
+
+def test_explicit_nonminimal_working_model_and_natural_algebra_transport():
+    E=WeierstrassModel((-1,1))
+    change=WeierstrassChange(E,(1,1,-1,2))
+    normalized=two_selmer(change.target)
+    retained=two_selmer(change.target,minimal=False)
+    assert retained.curves.original == retained.curves.working == change.target
+    assert retained.certified and retained.verify_evidence()
+    assert retained.dimension == normalized.dimension
+    for c in range(normalized.cardinality):
+        d=normalized.transport_to(retained,c)
+        assert retained.transport_to(normalized,d) == c
+    P=change.apply((0,1))
+    assert normalized.transport_to(retained,normalized.kummer(P)) == retained.kummer(P)

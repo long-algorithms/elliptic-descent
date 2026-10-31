@@ -138,3 +138,36 @@ def test_two_torsion_and_halves_transport_under_nonminimal_changes():
     for P in rational_two_torsion(E):
         assert set(rational_halves_of_two_torsion(C.target,C.apply(P))) == {
             C.apply(Q) for Q in rational_halves_of_two_torsion(E,P)}
+
+
+def test_kummer_values_lift_their_rational_points_on_the_auxiliary_models():
+    for a, points in [((-1,1), ((0,1),(0,-1),(1,1))),
+                      ((-1,0), ((1,0),(0,0),(-1,0))),
+                      ((0,-5,0,-16,80), ((8,12),(5,0),(4,0)))]:
+        E=WeierstrassModel(a); A=kummer_algebra(E)
+        for P in points:
+            delta=kummer_value(E,P)
+            D=CubicCover(E,delta)
+            parts=[(sp.S.One,)+(sp.S.Zero,)*(degree-1) for degree in A.degrees]
+            for i,g in enumerate(A.factors):
+                if len(g)==2 and P[0]==-g[0]:
+                    parts[i]=(sp.S.Zero,)
+            u=A.from_components(parts)
+            assert D.evaluate((*u,1)) in (E.point(P), E.negate(P))
+
+
+def test_split_selmer_classes_by_direct_rational_enumeration():
+    from elliptic_descent.arithmetic import square_class
+    E=WeierstrassModel((-1,0)); A=kummer_algebra(E)
+    reps=tuple(map(sp.Rational,(-2,-1,1,2)))
+    byclass={square_class(a,(2,)):a for a in reps}
+    key=lambda d: tuple(square_class(c[0],(2,)) for c in A.to_components(d))
+    accepted=set()
+    for a,b in product(reps,repeat=2):
+        c=byclass[square_class(a*b,(2,))]
+        d=A.from_components(((a,),(b,),(c,)))
+        model=CubicCover(E,d); evidence=cubic_local_solubility(model)
+        assert evidence.status != LocalStatus.UNKNOWN and evidence.verify(model)
+        if evidence.status == LocalStatus.SOLUBLE: accepted.add(key(d))
+    assert accepted == {key(kummer_value(E,P)) for P in rational_two_torsion(E)}
+    assert len(accepted)==4
