@@ -20,8 +20,18 @@ jobs:
       OPENBLAS_NUM_THREADS: '1'
     steps:
       - uses: actions/checkout@v4
-      - name: Archive exact tracked source for audit replay
-        run: git -c safe.directory="$GITHUB_WORKSPACE" archive --format=zip HEAD -o source-snapshot.zip
+      - name: Archive checkout source for audit replay
+        run: |
+          /home/sage/sage/sage -python - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          paths = sorted(p for p in Path('.').rglob('*') if p.is_file() and '.git' not in p.parts)
+          with ZipFile('source-snapshot.zip', 'w', ZIP_DEFLATED) as archive:
+              for path in paths:
+                  archive.write(path, path.as_posix())
+          Path('source-revision.txt').write_text(os.environ['GITHUB_SHA']+'\n')
+          PY
       - run: /home/sage/sage/sage -pip install -e .
       - run: /home/sage/sage/sage -python benchmarks/export_two_quadratic_arithmetic.py --output two-quadratic-arithmetic
       - uses: actions/upload-artifact@v4
@@ -30,4 +40,5 @@ jobs:
           name: two-quadratic-arithmetic-and-source
           path: |
             source-snapshot.zip
+            source-revision.txt
             two-quadratic-arithmetic/*.json
