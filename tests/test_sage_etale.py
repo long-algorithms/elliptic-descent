@@ -188,9 +188,8 @@ def test_proof_assumptions_and_explicit_settings():
         assert certified.space.arithmetic_proof == ProofStatus.CERTIFIED
 
 
-def test_no_implicit_relative_descent_extension():
-    # Prevent PR1 from accidentally exposing the irreducible orientation rule
-    # on product algebras. Later PRs must implement the declared equivalence.
-    for f in FIXTURES[1:]:
+def test_rational_root_types_still_require_separate_descent_equivalences():
+    # PR2 supports two quadratic factors, not the odd-degree-factor cases.
+    for f in (FIXTURES[1], FIXTURES[3], FIXTURES[4], FIXTURES[6]):
         with pytest.raises(NotImplementedError):
             relative_four_descent(f)

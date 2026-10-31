@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — v0.4 development
+
+- Add exact quartic etale arithmetic and factorwise square-class spaces (PR #5).
+- Extend complete relative descent to two irreducible quadratic factors, with
+  explicit orientation hypotheses and verified scalar-square transformations.
+- Add independent eclib Selmer-cardinality comparisons, locally obstructed
+  sources, additional exact tests and type-2+2 benchmark artifacts.
+- Retain version 0.3.0 until all v0.4 factorization types are implemented.
+  Rational-root cases and full curve-level 4-Selmer assembly remain separate.
+
 ## 0.3.0 — Complete relative descent for irreducible quartics
 
 - Assemble an exhaustive norm-pair descent with the rational-scalar quotient

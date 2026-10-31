@@ -1,6 +1,10 @@
-# Relative 4-descent for an irreducible quartic
+# Relative 4-descent: the irreducible baseline and two-quadratic extension
 
-This document specifies the mathematical contract of `relative_four_descent`.
+This document specifies the irreducible baseline of `relative_four_descent`.
+The API now also supports two irreducible quadratic factors;
+[two-quadratic-descent.md](two-quadratic-descent.md) supplies the product-algebra
+extension, scalar quotient and orientation proof. Rational-root cases remain
+unsupported. The irreducible argument below is retained as the original case.
 It does not claim a full curve-level 4-Selmer-group computation, a rank
 algorithm, minimization/reduction, or a practical algorithm for all input sizes.
 
