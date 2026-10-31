@@ -62,7 +62,7 @@ class QuadraticSystem:
         return rows
 
     def matrices(self):
-        """Integral Hessians: Q(u) = u^T H u / 2, also in characteristic 2."""
+        """Integral Hessians: 2Q(u)=u^T H u over Z; p=2 uses coefficients."""
         result = []
         for row in self.coefficients:
             H = sp.zeros(4)
