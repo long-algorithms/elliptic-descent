@@ -61,6 +61,7 @@ def geometry_record(F):
             'delta':vector(C.delta),'conic_matrix':matrix(C.presentation.parametrization.matrix),
             'quartic':vector(C.quartic.f),'jacobian_to_original':vector(C.marking.change.urst),
             'total_relative_candidates':f.relative.total_model_classes,
+            'relative_method':getattr(f.relative,'method','native_quartic_relative_descent'),
             'relative_complete':f.lifts.complete,'relative_certified':f.lifts.certified,
             'relative_unresolved':len(f.lifts.unresolved),'expected_liftable':f.expected_liftable,
             'models':[norm_pair(D) for D in f.models],'actions':actions,'orbits':f.orbits})

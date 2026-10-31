@@ -40,7 +40,7 @@ class is a local Kummer image. Thus, once nonempty, this relative Selmer set
 has |S2| elements. Its **global** fibre over c is different: the intermediate
 marking can change by an automorphism of C over E.
 
-Those automorphisms are exactly translations by E[2](Q). Indeed geometrically
+Those automorphisms are exactly translations by E(Q)[2]. Indeed geometrically
 C -> E is multiplication by two. An automorphism over E can only be a deck
 translation; a nontranslation origin-preserving automorphism cannot compose
 with [2] to give [2]. Descent to Q requires the translating point to be rational.
@@ -182,6 +182,36 @@ Pairwise verification checks that two zero-fibre diagrams are in the same orbit
 if and only if their labels differ by D. This verifies the exact-sequence map,
 not just the equation for its order. Changing the selected rational branch
 point shifts labels by a torsion Kummer class and leaves the quotient unchanged.
+
+## Reusing the complete 2-Selmer space in the zero fibre
+
+The zero fibre need not redo a quartic norm-kernel calculation. That presentation
+can introduce many auxiliary support primes (the initial 571a1 test exposed
+this cost). Instead, the default path transfers **every actual accepted cubic
+2-cover** by an explicit invertible rational linear transformation.
+
+Using alpha, beta, j and s above, let eta be its cubic-algebra representative.
+The evaluation map from the quartic algebra to Q times L is invertible. Set
+
+    xi(alpha)=1,    xi(beta)=eta/(s-j),
+    r_relative=-r_eta/(lc(f)*f'(alpha)).
+
+The exact coordinate transformation is `V=U(beta)/u`, `z=U(alpha)`. Both quadratic
+equations are checked against an invertible rational 2-by-2 equation matrix,
+and the independent norm identity `Norm_A(U)=z*u^3*Norm_L(V)` checks the signed
+map. Consequently the relative map followed by the marked intermediate map
+is precisely multiplication by two following the original auxiliary 2-cover.
+All original local evidence therefore transfers through a verified Q-isomorphism;
+it is not copied onto incompatible per-prime system keys.
+
+The result records method `verified_zero_fibre_transport_from_complete_selmer2`.
+Completeness comes from the complete labelled parent and this explicit equivalence,
+not from claiming that a new quartic norm kernel was enumerated. Each kernel
+label is recomputed from the resulting norm pair. `reuse_zero_fibre=False`
+retains the original descent route, and tests compare the actual classes and
+explicit scalar-square witnesses on a small split example. Explicit local or
+candidate limits also use that reference route and keep their partial semantics.
+The benchmark replay independently rebuilds these transferred zero-fibre models.
 
 ## Projection, exclusions and partial computations
 

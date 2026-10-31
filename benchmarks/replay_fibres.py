@@ -19,7 +19,8 @@ from elliptic_descent.weierstrass import WeierstrassModel, WeierstrassChange
 from elliptic_descent.equivalence import ScalarSquareEquivalence
 from elliptic_descent.fibre_actions import quartic_deck_action, FibreEquivalence, zero_fibre_kummer
 from elliptic_descent.four_selmer_fibres import action_orbits
-from elliptic_descent.quotient import row_basis, normal_form
+from elliptic_descent.quotient import row_basis, normal_form, quotient_fibre
+from elliptic_descent.arithmetic import AffineF2
 from elliptic_descent.two_selmer import F2Labels
 
 
@@ -51,6 +52,10 @@ def replay_record(record):
     evaluate=lambda a,b:sum(((a>>i)&1)*B[i][j]*((b>>j)&1) for i in range(dimension) for j in range(dimension))%2
     radical=tuple(c for c in range(1<<dimension) if all(evaluate(c,1<<j)==0 for j in range(dimension)))
     require(tuple(r['image_classes'])==radical,'wrong pairing image')
+    image_labels=F2Labels(dimension,tuple(r['image_basis']))
+    require(set(image_labels.ambient(i) for i in range(1<<image_labels.dimension))==set(radical),
+            'wrong radical basis')
+    require(r['pairing_rank']==dimension-image_labels.dimension,'wrong pairing rank')
     entries=r['torsion']; points=tuple(rational_point(e['point']) for e in entries)
     require(points==rational_two_torsion(E),'missing rational 2-torsion points')
     for e,P in zip(entries,points):
@@ -58,6 +63,9 @@ def replay_record(record):
                 'wrong rational halves')
     image=row_basis(e['coordinates'] for e in entries)
     require(tuple(r['torsion_image_basis'])==image,'wrong Kummer image span')
+    require(r['kernel_dimension']==dimension-len(image),'wrong kernel dimension')
+    quotient,_=quotient_fibre(AffineF2(dimension,0,tuple(1<<i for i in range(dimension))),image)
+    require(tuple(r['kernel_quotient_basis'])==quotient.basis,'wrong kernel quotient basis')
     require(all(type(e['coordinates']) is int and 0<=e['coordinates']<1<<dimension for e in entries),'invalid torsion labels')
     require(all((e['coordinates']==0)==bool(e['halves']) for e in entries),'wrong torsion stabilizers')
     require(tuple(f['coordinates'] for f in r['fibres'])==radical,'missing or duplicate image fibre')
@@ -104,6 +112,7 @@ def replay_record(record):
         total+=len(orbits)
         if f['coordinates']==0:
             zero_models=models
+            zero_presentation=P
             zero_cover=SimpleNamespace(ambient_label=0,quartic=P.quartic,marking=marking,
                         selmer=SimpleNamespace(curves=SimpleNamespace(working=W,to_working=change.inverse())))
             zero_actions=permutations
@@ -118,6 +127,10 @@ def replay_record(record):
     for label,D,e in zip(labels,zero_models,r['kernel_classes']):
         delta=zero_fibre_kummer(zero_cover,D,arithmetic)
         root=rationals(e['square_root']); representative=rationals(e['representative'])
+        if r['fibres'][0].get('relative_method')=='verified_zero_fibre_transport_from_complete_selmer2':
+            from elliptic_descent.zero_fibre import transport_zero_cover
+            rebuilt=transport_zero_cover(zero_presentation,CubicCover(W,representative))
+            require(rebuilt.verify() and rebuilt.model==D,'zero-fibre transfer did not reproduce its model')
         require(e['coordinates']==label and delta==rationals(e['delta'])
                 and A.multiply(representative,A.multiply(root,root))==delta,'wrong zero-fibre Kummer identity')
     for permutation,e in zip(zero_actions,entries):

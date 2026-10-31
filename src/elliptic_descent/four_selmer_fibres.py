@@ -329,8 +329,12 @@ class FourSelmerFibres:
                 and self.kernel_map.verify() and len(self.known_classes)==self.predicted_cardinality)
 
 
-def _assemble_one(cover, torsion, expected_liftable, *, proof, relative_limits):
-    lifts = cover.descend(proof=proof,**relative_limits)
+def _assemble_one(cover, torsion, expected_liftable, *, proof, relative_limits, reuse_zero_fibre):
+    if cover.ambient_label == 0 and reuse_zero_fibre and all(v is None for v in relative_limits.values()):
+        from .zero_fibre import zero_fibre_lifts
+        lifts = zero_fibre_lifts(cover)
+    else:
+        lifts = cover.descend(proof=proof,**relative_limits)
     relative = lifts.marked_result.relative_result
     if not lifts.complete:
         return AssembledFibre(lifts,expected_liftable,(),())
@@ -372,15 +376,16 @@ def _assemble_one(cover, torsion, expected_liftable, *, proof, relative_limits):
 
 
 def assemble_four_selmer_fibres(selmer, pairing=None, *, proof=True, prune=True,
-                               max_fibres=None, max_candidates=None, max_depth=None, max_nodes=None):
+                               max_fibres=None, max_candidates=None, max_depth=None, max_nodes=None,
+                               reuse_zero_fibre=True):
     """Assemble explicit global fibres with equivalence witnesses, not group addition.
 
     prune=False independently descends ALL Sel2 classes and checks liftability
     against the pairing. Any limit retains partial status; no incomplete fibre
     is turned into a global quotient or an empty-fibre assertion.
     """
-    if type(proof) is not bool or type(prune) is not bool:
-        raise TypeError('proof and prune must be booleans')
+    if any(type(v) is not bool for v in (proof,prune,reuse_zero_fibre)):
+        raise TypeError('proof, prune and reuse_zero_fibre must be booleans')
     if not selmer.complete:
         raise ValueError('a complete labelled 2-Selmer space is required')
     if max_fibres is not None:
@@ -401,7 +406,7 @@ def assemble_four_selmer_fibres(selmer, pairing=None, *, proof=True, prune=True,
         chosen = islice(chosen,max_fibres)
     start = perf_counter()
     fibres = tuple(_assemble_one(selmer.quartic_cover(c),torsion,c in image,
-                                proof=proof,relative_limits=limits) for c in chosen)
+                                proof=proof,relative_limits=limits,reuse_zero_fibre=reuse_zero_fibre) for c in chosen)
     result = FourSelmerFibres(selmer,B,torsion,fibres,exclusions,prune,
              (('pairing_and_torsion_seconds',preparation_seconds),('fibre_assembly_seconds',perf_counter()-start)))
     if result.complete:

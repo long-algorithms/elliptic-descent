@@ -161,3 +161,28 @@ def test_matching_retains_inequivalent_orientations_and_rejects_split_duplicates
     split=construct_four_cover((4,0,-5,0,1),(1,0,0,0))
     with pytest.raises(ArithmeticError):
         oriented_class_matcher(split.f,(split,replace(split,norm_witness=-split.norm_witness)))
+
+
+def test_zero_fibre_transport_and_native_descent_have_the_same_actual_classes():
+    from elliptic_descent.backends.sage_fibres import oriented_class_matcher
+    F=assembled((0,0,0,-1,0))
+    native=assemble_four_selmer_fibres(F.selmer,F.pairing,reuse_zero_fibre=False)
+    assert native.certified and native.verify_evidence()
+    fast=F.fibre(0); old=native.fibre(0)
+    assert fast.relative.method=='verified_zero_fibre_transport_from_complete_selmer2'
+    matcher=oriented_class_matcher(old.representative.quartic.f,old.models,fast.models)
+    correspond=[]
+    for D,label in zip(fast.models,F.kernel_map.labels):
+        matches=[i for i,C in enumerate(old.models) if matcher.scalar_square(D,C) is not None]
+        assert len(matches)==1
+        i=matches[0]
+        assert native.kernel_map.labels[i]==label
+        correspond.append(i)
+    assert len(set(correspond))==F.selmer.cardinality
+    # Transfer evidence is linked to the original accepted model and decision.
+    relative=fast.relative; c=relative.candidates[0]
+    bad=replace(c,local=replace(c.local,original=relative.candidates[1].local.original))
+    forged=replace(relative,candidates=(bad,*relative.candidates[1:]))
+    assert not forged.verify_evidence()
+    with pytest.raises(TypeError):
+        assemble_four_selmer_fibres(F.selmer,F.pairing,reuse_zero_fibre=1)
