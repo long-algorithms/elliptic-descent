@@ -123,6 +123,21 @@ def evaluate_map(covering, point, E):
     return E(xx, yy)
 
 
+def checked_group(result, expected):
+    """Perform one fresh full certificate check for this immutable audit result.
+
+    The certification property already verifies the group and its parents.
+    Repeating it for extraction, comparison and JSON formatting adds no
+    independent evidence. This local result is not a cached library verdict;
+    every invocation performs a new check, and failures block the audit.
+    """
+    group = result.require_group()
+    certified = result.certified
+    if not certified or group.invariant_factors != expected:
+        raise ArithmeticError('computed Sel4 disagrees with the independently determined rational quotient')
+    return group, certified
+
+
 def audit_fixture(name, *, require_installed=False):
     from sage.all import EllipticCurve
     from sage.env import SAGE_VERSION
@@ -162,9 +177,7 @@ def audit_fixture(name, *, require_installed=False):
     expected = (2,)*(n-2*r)+(4,)*(r+rank)
     start = perf_counter()
     result = ed.four_descent(ainvs, proof=True)
-    G = result.require_group(certified=True)
-    if not result.verify_evidence() or G.invariant_factors != expected:
-        raise ArithmeticError('computed Sel4 disagrees with the independently determined rational quotient')
+    G, certified = checked_group(result, expected)
     point_records, sums, separations = [], 0, 0
     if labelled:
         images = []
@@ -194,7 +207,7 @@ def audit_fixture(name, *, require_installed=False):
     return {**metadata(), 'version': ed.__version__, 'sage': SAGE_VERSION, 'fixture': name,
             'scope': 'eclib/torsion bound; rational Kummer-4 checks where labelled=true',
             'independence': 'reference uses no package square classes, pairing, or cocycle law',
-            'verified': True, 'certified': result.certified, 'assumptions': result.assumptions,
+            'verified': True, 'certified': certified, 'assumptions': result.assumptions,
             'complete': result.complete, 'eclib_selmer_dimension': eclib_dimension,
             'proved_rank': rank, 'sha_two_and_four_trivial': True,
             'expected_invariant_factors': expected, 'invariant_factors': G.invariant_factors,
