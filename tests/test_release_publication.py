@@ -81,15 +81,18 @@ def test_published_or_altered_draft_is_never_recovered(monkeypatch,field,value):
         publisher.replacement_allowed('owner/repo',draft,'v0.5.0',SHA,'123@'+'b'*40)
 
 
-def simulated_release(monkeypatch,tmp_path,*,old=False,empty=False,corrupt=None,move_main=False,move_tag=False):
-    """Publication-protocol stub only; it supplies no mathematical evidence."""
+def simulated_release(monkeypatch,tmp_path,*,old=False,empty=False,corrupt=None,
+                      move_main=False,move_tag=False,placeholder=False):
+    """Publication metadata only. Omitted tag_name reproduces the real failure."""
     import hashlib
     files = tmp_path/'output'
     files.mkdir()
     (files/'example.whl').write_bytes(b'audited distribution')
     (files/'SHA256SUMS').write_bytes(b'audited checksum file')
     state = dict(release=None if empty else draft_release('b'*40 if old else SHA), calls=[],
-                 tag=None, main_reads=0, tag_reads=0)
+                 tag=None, main_reads=0, tag_reads=0, next_asset=1000)
+    if placeholder:
+        state['release']['tag_name'] = 'untagged-observed'
     def fake_api(path, optional=False, *, method=None, payload=None):
         state['calls'].append((path,method,payload))
         if path.endswith('/git/ref/heads/main'):
@@ -99,28 +102,40 @@ def simulated_release(monkeypatch,tmp_path,*,old=False,empty=False,corrupt=None,
             return {'status':'ahead','merge_base_commit':{'sha':'b'*40}}
         if '/releases?' in path:
             return [] if state['release'] is None else [copy.deepcopy(state['release'])]
-        # A release-by-tag request reproduces the real GitHub failure.
+        if path == 'repos/owner/repo/releases' and method == 'POST':
+            assert state['release'] is None
+            state['release'] = {**draft_release(), **payload}
+            return copy.deepcopy(state['release'])
+        if path.startswith('repos/owner/repo/releases/123/assets?'):
+            return copy.deepcopy(state['release']['assets'])
+        # Neither release-by-tag nor a different numeric identity may be used.
         assert path == 'repos/owner/repo/releases/123', path
         if method == 'PATCH':
-            if 'target_commitish' in payload:
-                assert state['release']['draft'] and state['tag'] is None
-                state['release']['target_commitish'] = payload['target_commitish']
-            if 'draft' in payload:
-                assert payload == {'draft':False,'make_latest':'true'}
-                state['release']['draft'] = False
+            assert state['release']['draft'] and state['tag'] is None
+            # PR18's omitted tag_name really produced an untagged placeholder.
+            state['release']['tag_name'] = payload.get('tag_name', 'untagged-observed')
+            state['release'].update(payload)
+            if payload.get('draft') is False:
                 state['release']['published_at'] = '2026-11-01T00:00:00Z'
-                state['tag'] = SHA
+                state['tag'] = payload['target_commitish']
         return copy.deepcopy(state['release'])
     def fake_gh(*args, **kwargs):
+        from urllib.parse import parse_qs, urlparse
         state['calls'].append(args)
-        if args[:2] == ('release','create'):
-            assert state['release'] is None
-            state['release'] = draft_release()
-            return b'created'
-        assert args[:2] == ('release','upload')
+        assert args[0] == 'api'  # No CLI create/upload by tag for a draft.
+        if args[2:4] == ('--method', 'DELETE'):
+            identifier = int(args[1].rsplit('/',1)[1])
+            state['release']['assets'] = [a for a in state['release']['assets'] if a['id'] != identifier]
+            return b''
+        assert args[1].startswith('https://uploads.github.com/repos/owner/repo/releases/123/assets?')
+        assert args[2:6] == ('--method','POST','--header','Content-Type: application/octet-stream')
+        assert args[6] == '--input'
         assert state['release']['target_commitish'] == SHA and state['release']['draft']
-        state['release']['assets'] = [dict(name=p.name,state='uploaded',size=p.stat().st_size,
-            digest='sha256:'+hashlib.sha256(p.read_bytes()).hexdigest()) for p in files.iterdir()]
+        p = Path(args[7])
+        assert parse_qs(urlparse(args[1]).query)['name'] == [p.name]
+        state['next_asset'] += 1
+        state['release']['assets'].append(dict(id=state['next_asset'],name=p.name,state='uploaded',
+            size=p.stat().st_size,digest='sha256:'+hashlib.sha256(p.read_bytes()).hexdigest()))
         if corrupt == 'checksum':
             state['release']['assets'][0]['digest'] = 'sha256:'+'0'*64
         elif corrupt == 'duplicate':
@@ -128,7 +143,7 @@ def simulated_release(monkeypatch,tmp_path,*,old=False,empty=False,corrupt=None,
         elif corrupt == 'missing':
             state['release']['assets'].pop()
         elif corrupt == 'state':
-            state['release']['draft'] = False
+            state['release']['prerelease'] = True
         elif corrupt == 'identity':
             state['release']['tag_name'] = 'unrelated'
         return b'uploaded'
@@ -151,7 +166,9 @@ def test_publish_lifecycle_works_when_tag_endpoint_cannot_see_drafts(monkeypatch
     assert state['tag'] == SHA
     writes = [c for c in state['calls'] if len(c)==3 and c[1]=='PATCH']
     assert len(writes) == (2 if mode=='recover' else 1)
-    assert writes[-1][2] == {'draft':False,'make_latest':'true'}
+    assert all(c[2]['tag_name'] == 'v0.5.0' and c[2]['target_commitish'] == SHA for c in writes)
+    assert writes[-1][2] == dict(tag_name='v0.5.0', target_commitish=SHA, draft=False,
+                                  prerelease=False, make_latest='true')
 
 
 @pytest.mark.parametrize('corrupt',['checksum','duplicate','missing','state','identity'])
@@ -223,3 +240,67 @@ def test_group_replay_has_separate_budget_without_omitting_any_fixture():
     assert 'construction-${{ matrix.fixture }}.record' in text
     assert 'name: group-${{ matrix.fixture }}' in text
     assert 'uses: actions/download-artifact@v4' in text
+
+
+def test_observed_placeholder_recovered_by_explicit_numeric_identity(monkeypatch,tmp_path):
+    files,state = simulated_release(monkeypatch,tmp_path,old=True,placeholder=True)
+    old = 'b'*40
+    original = copy.deepcopy(state['release'])
+    found = publisher.locate_release('owner/repo','v0.5.0',SHA,'123@'+old,'untagged-observed')
+    assert found == original
+    final = publisher.stage_and_publish('owner/repo',SHA,'v0.5.0',files,found,
+                                         '123@'+old,'untagged-observed')
+    assert final['id'] == 123 and final['tag_name'] == 'v0.5.0'
+    assert final['draft'] is False and state['tag'] == SHA
+    assert not any(c[0] == 'repos/owner/repo/releases' and c[1] == 'POST'
+                   for c in state['calls'] if len(c) == 3)
+
+
+@pytest.mark.parametrize('change', [{'id':456}, {'target_commitish':'c'*40},
+    {'tag_name':'untagged-another'}, {'draft':False}, {'prerelease':True},
+    {'published_at':'2026-11-01T00:00:00Z'}])
+def test_placeholder_recovery_rejects_any_identity_or_state_mismatch(monkeypatch,change):
+    draft = {**draft_release('b'*40), 'tag_name':'untagged-observed', **change}
+    monkeypatch.setattr(publisher,'find_release',lambda *a:None)
+    monkeypatch.setattr(publisher,'api',lambda *a,**k:draft)
+    monkeypatch.setattr(publisher,'tag_commit',lambda *a:None)
+    with pytest.raises(ValueError):
+        publisher.locate_release('owner/repo','v0.5.0',SHA,'123@'+'b'*40,'untagged-observed')
+
+
+def test_placeholder_name_alone_never_authorizes_recovery(monkeypatch):
+    monkeypatch.setattr(publisher,'find_release',lambda *a:None)
+    monkeypatch.setattr(publisher,'api',lambda *a,**k:pytest.fail('request without explicit ID'))
+    with pytest.raises(ValueError):
+        publisher.locate_release('owner/repo','v0.5.0',SHA,recovery_tag='untagged-observed')
+
+
+def test_asset_upload_by_id_reuses_identical_files_and_replaces_changed_expected_files(monkeypatch,tmp_path):
+    import hashlib
+    files,state = simulated_release(monkeypatch,tmp_path)
+    original = dict(id=300,name='example.whl',state='uploaded',size=1,digest='sha256:'+'0'*64)
+    same = dict(id=301,name='SHA256SUMS',state='uploaded',size=(files/'SHA256SUMS').stat().st_size,
+                digest='sha256:'+hashlib.sha256((files/'SHA256SUMS').read_bytes()).hexdigest())
+    state['release']['assets'] = [original,same]
+    publisher.upload_assets_by_id('owner/repo',123,files)
+    publisher.check_uploaded_assets(state['release'],files)
+    assert any(c[:4] == ('api','repos/owner/repo/releases/assets/300','--method','DELETE') for c in state['calls'])
+    assert not any(c[:4] == ('api','repos/owner/repo/releases/assets/301','--method','DELETE') for c in state['calls'])
+    state['calls'].clear()
+    publisher.upload_assets_by_id('owner/repo',123,files)
+    assert all(len(c) == 3 and c[1] is None for c in state['calls'])
+
+
+@pytest.mark.parametrize('names',[['unknown'],['example.whl','example.whl']])
+def test_unknown_or_duplicate_assets_are_not_deleted(monkeypatch,tmp_path,names):
+    files,state = simulated_release(monkeypatch,tmp_path)
+    state['release']['assets'] = [dict(id=i+1,name=n) for i,n in enumerate(names)]
+    with pytest.raises(ValueError):
+        publisher.upload_assets_by_id('owner/repo',123,files)
+    assert not any(c[0] == 'api' for c in state['calls'])
+
+
+def test_asset_listing_is_exhaustive(monkeypatch):
+    monkeypatch.setattr(publisher,'api',lambda path: [{'id':i} for i in range(100)]
+                        if path.endswith('page=1') else [{'id':101}])
+    assert len(publisher.release_assets('owner/repo',123)) == 101

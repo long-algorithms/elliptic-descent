@@ -2,11 +2,18 @@
 
 ## Draft-release recovery
 
-The publisher lists authenticated releases and retains the numeric release ID;
-it does not assume an unpublished release is available from the tag endpoint.
-Before publication it compares every uploaded asset's size and SHA256 digest
-with the freshly audited local artifact. Duplicate, missing or changed assets
-prevent publication.
+The publisher lists authenticated releases and retains the numeric release ID.
+Draft creation, metadata updates and asset uploads use that ID rather than a
+release-by-tag lookup. Every metadata write explicitly supplies both the intended
+`tag_name` and `target_commitish`, as well as publication state. An omitted
+`tag_name` during the first recovery changed the draft to a GitHub-generated
+`untagged-...` placeholder; a stateful regression reproduces that failure.
+
+Before publication, a fully paginated asset listing is checked against every
+freshly audited file's size and SHA256. Identical draft assets may be reused;
+changed expected files are replaced by numeric asset ID. Unknown or duplicate
+assets fail instead of being silently deleted. Missing, changed or incomplete
+uploads prevent publication.
 
 An abandoned draft targeting an older revision is not replaced implicitly.
 The narrowly scoped `--replace-draft ID@OLD_SHA` option requires the exact
@@ -16,6 +23,14 @@ workflow and artifact audits must pass before any draft mutation. Published
 releases and tags are never retargeted. The release workflow records the one
 known draft left by the initial publication failure; the allowance has no
 effect once the same-revision release has been published.
+
+A draft whose intended tag was replaced by a placeholder additionally requires
+`--recover-draft-tag EXACT_OLD_TAG`. Recovery identifies it by the supplied
+numeric ID and checks the exact old revision, exact old tag, unpublished state,
+absence of both Git tags, and ancestry. No wildcard `untagged-*` match is used.
+The workflow records the observed triple for draft 430578096. All exact-main
+mathematical, package and evidence gates still run before any mutation. A retry
+after successful retargeting uses the ordinary intended-tag draft path.
 
 ## Every exact-main gate must run
 
