@@ -1,0 +1,40 @@
+name: Keep PR6 checks without duplicate push runs
+on:
+  push:
+    branches: [verification/pr6-pr-only-checks]
+permissions:
+  actions: write
+  contents: read
+jobs:
+  deduplicate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel only redundant push checks for this exact head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          repo = 'long-algorithms/elliptic-descent'
+          head = 'ee5640f0b98bec1925c168bdce5d289224dd0b30'
+          branch = 'feature/v0.5-four-selmer-group-cocycles'
+          base = 'https://api.github.com/repos/' + repo
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'}
+          request = urllib.request.Request(base + '/actions/runs?head_sha=' + head + '&event=push&per_page=100', headers=headers)
+          with urllib.request.urlopen(request) as response:
+              runs = json.load(response)['workflow_runs']
+          for run in runs:
+              if run['head_sha'] != head or run['head_branch'] != branch or run['event'] != 'push' or run['status'] == 'completed':
+                  continue
+              request = urllib.request.Request(base + '/actions/runs/' + str(run['id']) + '/cancel', data=b'', headers=headers, method='POST')
+              try:
+                  with urllib.request.urlopen(request) as response:
+                      print('Cancelled duplicate push run', run['id'], run['name'], response.status)
+              except urllib.error.HTTPError as error:
+                  if error.code != 409:
+                      raise
+                  print('Already finished', run['id'])
+          print('PR-event checks and all other revisions/branches remain unchanged.')
+          PY
