@@ -3,26 +3,32 @@ on:
   push:
     paths:
       - 'src/**'
+      - 'tests/test_sage_origin_torsors.py'
       - 'benchmarks/finite_torsor_root_probe.py'
       - '.github/workflows/finite-torsor-audit.yml'
   pull_request:
 permissions:
   contents: read
 jobs:
-  exact-root-discovery:
+  exact-origin-arithmetic:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root
     env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
       OMP_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '1'
     steps:
       - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - run: /home/sage/sage/sage -python -m pytest tests/test_sage_origin_torsors.py -v -s --durations=10 --junitxml=origin-torsors.xml
       - run: /home/sage/sage/sage -python benchmarks/finite_torsor_root_probe.py > finite-torsor-roots.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: finite-torsor-root-probe
-          path: finite-torsor-roots.json
+          name: finite-torsor-origin-audit
+          path: |
+            origin-torsors.xml
+            finite-torsor-roots.json
