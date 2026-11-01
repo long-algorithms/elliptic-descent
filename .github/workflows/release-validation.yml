@@ -1,0 +1,36 @@
+name: Independent release validation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [rank_one, split_two_torsion, cyclic_two_torsion, cyclic_four_torsion, full_two_and_four, zero_selmer]
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      SYMPY_GROUND_TYPES: flint
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install build 'setuptools>=77.0.3' 'python-flint==0.8.0'
+      - run: /home/sage/sage/sage -python -m build --wheel
+      - run: /home/sage/sage/sage -pip install dist/*.whl
+      - name: Independent rational quotient and actual-class checks on installed wheel
+        run: |
+          cd /tmp
+          /home/sage/sage/sage -python -u "$GITHUB_WORKSPACE/benchmarks/independent_mw.py" --fixture ${{ matrix.fixture }} --require-installed > "$GITHUB_WORKSPACE/independent-${{ matrix.fixture }}.jsonl"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-${{ matrix.fixture }}
+          path: independent-${{ matrix.fixture }}.jsonl
