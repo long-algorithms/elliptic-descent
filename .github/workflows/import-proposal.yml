@@ -1,48 +1,43 @@
-name: Import reviewed PR6 proposal
+name: Prune duplicate PR6 verification runs
 on:
   push:
     branches: [verification/import-v05-pr6-proposal]
 permissions:
-  contents: write
+  actions: write
+  contents: read
 jobs:
-  import:
+  prune:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Reconstruct the exact reviewed patch
+      - name: Keep PR checks and cancel only same-head push duplicates
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           python - <<'PY'
-          import base64, bz2, hashlib, os
-          from pathlib import Path
-          encoded = ''.join(Path(f'payload/patch-{i}.b64').read_text() for i in range(3))
-          patch = bz2.decompress(base64.b64decode(encoded, validate=True))
-          expected = '7d3048d73f5840c062d9b42f36e92667ded9f9812e28ce6178c4a82265f9ad24'
-          if hashlib.sha256(patch).hexdigest() != expected:
-              raise SystemExit('Patch checksum mismatch; no branch will be written')
-          Path(os.environ['RUNNER_TEMP'], 'pr6-proposal.patch').write_bytes(patch)
-          print('Verified patch SHA256:', expected)
+          import json, os, urllib.request, urllib.error
+          repo = 'long-algorithms/elliptic-descent'
+          head = 'b2016354477ba185db2460b42f659a8c9d4322ea'
+          branch = 'feature/v0.5-four-selmer-group-cocycles'
+          base = 'https://api.github.com/repos/' + repo
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                     'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'}
+          url = base + '/actions/runs?head_sha=' + head + '&event=push&per_page=100'
+          with urllib.request.urlopen(urllib.request.Request(url, headers=headers)) as response:
+              runs = json.load(response)['workflow_runs']
+          for run in runs:
+              if (run['head_sha'] != head or run['head_branch'] != branch
+                      or run['event'] != 'push' or run['status'] == 'completed'):
+                  continue
+              request = urllib.request.Request(base + '/actions/runs/' + str(run['id']) + '/cancel',
+                                               data=b'', headers=headers, method='POST')
+              try:
+                  with urllib.request.urlopen(request) as response:
+                      print('Cancelled duplicate push run', run['id'], run['name'], response.status)
+              except urllib.error.HTTPError as error:
+                  if error.code != 409:
+                      raise
+                  print('Run already finished', run['id'])
+          print('PR-event checks and all other branches/revisions were left unchanged.')
           PY
-      - name: Create the exact source revision on a separate branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          base=d10f6f7b9f2e665ead53c13cbc9df4afa7c57a2e
-          expected_tree=4b23426745ccff1825f38f56cc931fb00ab4363f
-          branch=feature/v0.5-four-selmer-group-cocycles
-          git checkout --detach "$base"
-          git apply --index "$RUNNER_TEMP/pr6-proposal.patch"
-          tree=$(git write-tree)
-          test "$tree" = "$expected_tree"
-          git -c user.name='Christopher D. Long' -c user.email='galizur@gmail.com' commit -m 'Implement explicit 4-Selmer group arithmetic with exact cocycle certificates'
-          revision=$(git rev-parse HEAD)
-          git push origin "HEAD:refs/heads/$branch"
-          printf '{"base":"%s","tree":"%s","commit":"%s","branch":"%s"}\n' "$base" "$tree" "$revision" "$branch" > "$RUNNER_TEMP/pr6-import-report.json"
-          cat "$RUNNER_TEMP/pr6-import-report.json"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pr6-exact-import
-          path: ${{ runner.temp }}/pr6-import-report.json
