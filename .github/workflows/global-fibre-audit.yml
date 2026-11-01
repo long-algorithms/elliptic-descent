@@ -1,11 +1,7 @@
 name: Global fibre audit
 on:
   push:
-    paths:
-      - 'src/**'
-      - 'benchmarks/four_selmer_fibres.py'
-      - 'benchmarks/replay_fibres.py'
-      - '.github/workflows/global-fibre-audit.yml'
+    branches: [main]
   pull_request:
 permissions:
   contents: read

@@ -1,10 +1,7 @@
 name: Two-Selmer arithmetic audit
 on:
   push:
-    paths:
-      - 'src/**'
-      - 'benchmarks/export_two_selmer_arithmetic.py'
-      - '.github/workflows/two-selmer-arithmetic.yml'
+    branches: [main]
   pull_request:
 permissions:
   contents: read

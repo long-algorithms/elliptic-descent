@@ -1,10 +1,7 @@
 name: Two-quadratic arithmetic audit
 on:
   push:
-    paths:
-      - 'src/**'
-      - 'benchmarks/export_two_quadratic_arithmetic.py'
-      - '.github/workflows/two-quadratic-audit.yml'
+    branches: [main]
   pull_request:
 permissions:
   contents: read
