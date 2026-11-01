@@ -6,6 +6,9 @@ by galois_covering.py. This deliberately expensive reference backend does
 not claim to be Fisher's efficient obstruction-algebra implementation.
 """
 from itertools import product
+import os
+import sys
+from time import perf_counter
 
 import sympy as sp
 
@@ -13,6 +16,17 @@ from .sage import _sage
 from ..arithmetic import nonnegative_integer
 from ..galois_covering import (ExactGaloisField, FourTorsionCertificate,
                                CoverTrivialization, GaloisGroupEvidence)
+
+
+def _progress(stage):
+    """Synchronous diagnostics; no watchdog thread or signal handler.
+
+    CI records expensive stages by default. Set ELLIPTIC_DESCENT_GROUP_TRACE
+    explicitly to 0 or 1 to override that default in any environment.
+    """
+    default = '1' if os.environ.get('CI') == 'true' else '0'
+    if os.environ.get('ELLIPTIC_DESCENT_GROUP_TRACE', default) == '1':
+        print(f'[group {perf_counter():.3f}] {stage}', file=sys.stderr, flush=True)
 
 
 def _sage_rational(sage, value):
@@ -26,6 +40,7 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
     raises, and no completed group object is returned. The cap bounds the
     accepted field degree, not the time spent discovering that field.
     """
+    _progress('starting common-field discovery')
     if not fibres.complete:
         raise ValueError('group arithmetic requires a complete fibre assembly')
     cap = None if max_field_degree is None else nonnegative_integer(max_field_degree,'maximum field degree')
@@ -65,9 +80,11 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
     if basis is None:
         raise ArithmeticError('failed to choose a basis of E[4]')
 
+    _progress('all sixteen torsion points and their basis checked')
     numbers = list(roots)+[c for P in basis for c in P.xy()]
     descriptors = []
     for C in fibres.known_classes:
+        _progress(f'cover {C.key}: algebraic branch and square roots')
         D = C.covering.model
         marking = C.covering.marking
         if marking.translation is not None or marking.target != E0:
@@ -90,20 +107,25 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
         numbers.extend((alpha,*square_roots))
         descriptors.append((C.key,D,marking.change.urst,start))
 
+    _progress(f'converting {len(numbers)} algebraic values to a common field')
     K,values,embedding = number_field_elements_from_algebraics(
         numbers, minimal=True, same_field=True, name='a')
+    _progress(f'common field degree {K.degree()}; checking embeddings')
     if any(embedding(v)!=a for v,a in zip(values,numbers)):
         raise ArithmeticError('common number-field conversion changed an algebraic value')
     if cap is not None and K.degree()>cap:
         raise RuntimeError(f'common field degree {K.degree()} exceeds the requested cap {cap}')
+    _progress('computing common-field automorphisms')
     automorphisms = tuple(K.automorphisms())
     if len(automorphisms)==K.degree():
         L = K
     else:
+        _progress('computing normal closure')
         L,inclusion = K.galois_closure('g',map=True)
         values = [inclusion(v) for v in values]
         automorphisms = tuple(L.automorphisms())
     n = int(L.degree())
+    _progress(f'normal field degree {n}; exporting certificate')
     if cap is not None and n>cap:
         raise RuntimeError(f'normal closure degree {n} exceeds the requested cap {cap}')
     if len(automorphisms)!=n:
@@ -132,6 +154,8 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
                     pack(values[start]),tuple(pack(v) for v in values[start+1:start+4]))
                     for key,D,urst,start in descriptors)
     evidence = GaloisGroupEvidence(T,covers)
+    _progress('independent rational power-basis certificate verification')
     if not evidence.verify():
         raise ArithmeticError('the independent exact Galois/covering certificate audit failed')
+    _progress('discovery and independent certificate verification completed')
     return evidence
