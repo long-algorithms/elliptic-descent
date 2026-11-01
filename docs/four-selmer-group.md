@@ -1,8 +1,7 @@
 # Exact 4-Selmer group arithmetic — v0.5 development step 6
 
-This proposed step adds operations on the **actual global covering classes**
-constructed by [step 5](four-selmer-fibres.md). The package version remains
-**0.4.0**. Its general algorithm is a deliberately expensive reference route:
+This component supplies operations on the **actual global covering classes**
+constructed by [step 5](four-selmer-fibres.md), as part of [v0.5.0](v0.5.md). Its general algorithm is a deliberately expensive reference route:
 trivialize each marked covering over an exact normal number field, compute its
 Galois cocycle in E[4], and add cocycles modulo actual coboundaries. It is not
 Fisher's efficient obstruction-algebra implementation, and no performance
@@ -251,10 +250,10 @@ The benchmark exports complete parent geometry and exact group evidence.
 size and invariant factors match. Construction and subsequent verification
 times are separate. Shared CI timings are not performance guarantees.
 
-This step is a proposal until the exact final revision passes those genuine
-Sage and CI gates. Local geometric replay does not establish that every Sage
-API call or every normal-closure calculation has succeeded. Neither the code
-nor its tests constitute formal verification or external mathematical review.
+The release requires these genuine Sage and CI gates on the exact tagged
+revision; see [the release audit](v0.5.md). Local geometric replay does not
+replace fresh discovery checks. Neither the code nor its tests constitute
+formal verification or external mathematical review.
 
 ## Exact generator-based certificate verification
 

@@ -1,6 +1,6 @@
 # Labelled 2-Selmer arithmetic — v0.5 development step 2
 
-The package remains **0.4.0**. `two_selmer(E)` computes the full 2-Selmer group
+This component is included in [v0.5.0](v0.5.md). `two_selmer(E)` computes the full 2-Selmer group
 of a rational elliptic curve in explicit cubic-algebra coordinates, together
 with Kummer maps and rational 2-/4-torsion data. It does **not** compute the
 4-Selmer group, its fibres, a Cassels--Tate pairing, or a Mordell--Weil basis.
@@ -128,8 +128,8 @@ including exact integral model changes and independently checked modular/Hensel
 certificates. The determinant-pencil good-reduction bound covers all remaining
 primes. Unbounded mode terminates by the same finite-branching/compactness and
 smooth Hensel argument as the existing solver. Explicit search limits retain
-unknown outcomes. The auxiliary models are not yet binary-quartic presentations
-suitable for automatically feeding the relative 4-descent interface.
+unknown outcomes. The [quartic presentation adapter](selmer-quartics.md) converts
+these auxiliary models before feeding the relative 4-descent interface.
 
 ### A compact singular-reduction obstruction
 
@@ -267,8 +267,10 @@ No live Magma comparison or performance superiority is claimed.
 The subsequent [step 3 interface](selmer-quartics.md) now converts arbitrary
 labelled classes to marked binary quartics via the auxiliary conic, preserving
 the arithmetic label and original target. This does not turn a class list into
-a global 4-Selmer group. Pairings, global assembly and exact Mordell--Weil
-rank/saturation remain later work.
+a global 4-Selmer group by itself. The [pairing](cassels-tate.md),
+[global assembly](four-selmer-fibres.md) and [group layer](four-selmer-group.md)
+provide those subsequent stages. Exact Mordell--Weil rank/saturation is outside
+the release scope.
 
 ## Primary references
 

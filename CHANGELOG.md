@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased — v0.5 development
+## 0.5.0 — Curve-level 4-Selmer groups over Q
+
+- Add six independent eclib/torsion/rational-quotient audits on installed wheels.
+- Compare all named covering classes and sums with rational Kummer-4 classes on four curves.
+- Gate publication on exact-head tests, complete benchmark inventories and audited distributions.
+- Retain original CI evidence, checksums and source provenance with the GitHub release.
 
 - Add `four_descent` and `DescentSession` for the complete curve-level pipeline.
 - Distinguish intermediate completion, full-group completion, certification and assumptions.
@@ -37,7 +42,7 @@
 - Construct the zero 2-Selmer class as multiplication by two on the original curve.
 - Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
 - Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
-- Keep version 0.4.0 pending the final integrated v0.5 release audit.
+- Publish v0.5.0 only after the final integrated release audit passes.
 
 ## 0.4.0 — All squarefree degree-four factorization types
 
