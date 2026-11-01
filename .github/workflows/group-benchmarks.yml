@@ -20,6 +20,7 @@ jobs:
       ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
       OMP_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '1'
+      ELLIPTIC_DESCENT_GROUP_SNAPSHOT: group-discovery-${{ matrix.fixture }}.json
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
@@ -32,3 +33,4 @@ jobs:
           path: |
             four-selmer-group-${{ matrix.fixture }}.jsonl
             group-replay-${{ matrix.fixture }}.jsonl
+            group-discovery-${{ matrix.fixture }}.json

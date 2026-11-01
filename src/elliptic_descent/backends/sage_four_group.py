@@ -6,7 +6,9 @@ by galois_covering.py. This deliberately expensive reference backend does
 not claim to be Fisher's efficient obstruction-algebra implementation.
 """
 from itertools import product
+import json
 import os
+from pathlib import Path
 import sys
 from time import perf_counter
 
@@ -15,7 +17,7 @@ import sympy as sp
 from .sage import _sage
 from ..arithmetic import nonnegative_integer
 from ..galois_covering import (ExactGaloisField, FourTorsionCertificate,
-                               CoverTrivialization, GaloisGroupEvidence)
+                               CoverTrivialization, GaloisGroupEvidence, evidence_record)
 
 
 def _progress(stage):
@@ -154,6 +156,17 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
                     pack(values[start]),tuple(pack(v) for v in values[start+1:start+4]))
                     for key,D,urst,start in descriptors)
     evidence = GaloisGroupEvidence(T,covers)
+    snapshot = os.environ.get('ELLIPTIC_DESCENT_GROUP_SNAPSHOT')
+    if snapshot:
+        # Diagnostic data can survive an interrupted verification, but must
+        # never be confused with a completed, evidence-verified group record.
+        destination = Path(snapshot)
+        temporary = destination.with_name(destination.name+'.tmp')
+        temporary.write_text(json.dumps({
+            'verified': False, 'scope': 'unverified discovery checkpoint only',
+            'galois_evidence': evidence_record(evidence),
+        }, sort_keys=True)+'\n')
+        temporary.replace(destination)
     _progress('independent rational power-basis certificate verification')
     if not evidence.verify():
         raise ArithmeticError('the independent exact Galois/covering certificate audit failed')
