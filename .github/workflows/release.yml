@@ -30,4 +30,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-        run: python tools/publish_release.py --repository "$GITHUB_REPOSITORY" --revision "$RELEASE_SHA"
+          # The known unpublished draft left by PR17's tag-lookup failure.
+          # Recovery is accepted only with no tag and after all exact-main gates.
+          REPLACE_DRAFT: '430578096@d41474d864d5cdfc7a7455975b4afdcc0de19a8f'
+        run: python tools/publish_release.py --repository "$GITHUB_REPOSITORY" --revision "$RELEASE_SHA" --replace-draft "$REPLACE_DRAFT"
