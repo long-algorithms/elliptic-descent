@@ -4,11 +4,15 @@ on:
     paths:
       - 'src/**'
       - 'tests/test_sage_origin_torsors.py'
+      - 'tests/test_sage_finite_torsors.py'
       - 'benchmarks/finite_torsor_root_probe.py'
       - '.github/workflows/finite-torsor-audit.yml'
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: finite-torsor-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   exact-origin-arithmetic:
     runs-on: ubuntu-latest
@@ -23,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
-      - run: /home/sage/sage/sage -python -m pytest tests/test_sage_origin_torsors.py -v -s --durations=10 --junitxml=origin-torsors.xml
+      - run: /home/sage/sage/sage -python -m pytest tests/test_sage_origin_torsors.py tests/test_sage_finite_torsors.py -v -s --durations=10 --junitxml=origin-torsors.xml
       - run: /home/sage/sage/sage -python benchmarks/finite_torsor_root_probe.py > finite-torsor-roots.json
       - uses: actions/upload-artifact@v4
         if: always()
