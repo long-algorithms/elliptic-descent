@@ -476,13 +476,17 @@ class CoverTrivialization:
                 return False
             if len(set((alpha,*beta)))!=4 or any(polynomial_value(f,b,F.zero) for b in beta):
                 return False
-            if any(v*v!=d for v,d in zip(roots,delta)) or roots[0]*roots[1]*roots[2] != -f[4]*A*r/(xia*xia):
+            # A and xi(alpha) were checked nonzero above. Cross multiplication
+            # checks precisely the same signed identity without an extended
+            # polynomial GCD in the much larger common normal field.
+            if (any(v*v!=d for v,d in zip(roots,delta))
+                    or roots[0]*roots[1]*roots[2]*xia*xia != -f[4]*A*r):
                 return False
             P = self.origin(torsion)
             # All four branch evaluations establish the two quadric equations.
             for t in (alpha,*beta):
                 value = polynomial_value(xi,t,F.zero)*polynomial_value(P,t,F.zero)**2
-                if value != xia*(alpha-t)/A:
+                if value*A != xia*(alpha-t):
                     return False
             return self.evaluate(torsion,P) is None
         except (TypeError,ValueError,ZeroDivisionError,ArithmeticError):

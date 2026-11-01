@@ -24,3 +24,9 @@ remain required, with the same job timeouts and mathematical assertions.
 
 References for the accelerator: [SymPy polynomial domains](https://docs.sympy.org/latest/modules/polys/domainsintro.html)
 and [python-flint](https://python-flint.readthedocs.io/en/latest/).
+
+The signed-product and branch-evaluation checks also clear their nonzero
+field denominators rather than computing dense inverses. Nonvanishing is
+verified first, so these are equivalent polynomial identities. A regression
+forbids nonrational division during covering verification and separately
+compares both forms of each identity on actual degree-16 covering data.
