@@ -1,0 +1,28 @@
+name: Finite torsor audit
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'benchmarks/finite_torsor_root_probe.py'
+      - '.github/workflows/finite-torsor-audit.yml'
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  exact-root-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -python benchmarks/finite_torsor_root_probe.py > finite-torsor-roots.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: finite-torsor-root-probe
+          path: finite-torsor-roots.json
