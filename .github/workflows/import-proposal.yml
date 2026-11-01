@@ -1,17 +1,17 @@
-name: Diagnostic exact field-tower probe
+name: Diagnostic reduced primitive-element probe
 on:
   push:
     branches: [verification/import-v05-pr6-proposal]
 permissions:
   contents: read
 jobs:
-  tower:
+  reduced:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        fixture: [split_two_torsion, full_two_and_four, split_nontrivial_radical]
+        fixture: [full_two_and_four, split_nontrivial_radical]
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root
@@ -23,15 +23,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: b2016354477ba185db2460b42f659a8c9d4322ea
+          ref: ee5640f0b98bec1925c168bdce5d289224dd0b30
           path: source
       - run: /home/sage/sage/sage -pip install -e './source[test]'
-      - name: Diagnostic discovery and exact proof (not a replacement for PR checks)
-        run: timeout 900 /home/sage/sage/sage -python -u tower_discovery_probe.py "$GITHUB_WORKSPACE/source" ${{ matrix.fixture }}
+      - name: Reduced primitive element and unchanged exact proof (diagnostic only)
+        run: timeout 900 /home/sage/sage/sage -python -u optimized_field_probe.py "$GITHUB_WORKSPACE/source" ${{ matrix.fixture }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tower-diagnostic-${{ matrix.fixture }}
+          name: reduced-diagnostic-${{ matrix.fixture }}
           path: |
-            tower-progress.jsonl
-            tower-unverified-evidence.json
+            reduced-progress.jsonl
+            reduced-unverified-evidence.json
