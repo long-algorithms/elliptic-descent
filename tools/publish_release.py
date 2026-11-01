@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
+from urllib.parse import quote
 
 from release_gate import VERSION, audit_directory, require, selected_runs
 from check_distribution import check_distributions
@@ -72,7 +73,7 @@ def release_identity(release, tag, sha, *, draft):
         require(release.get('published_at') is None, 'draft was previously published')
 
 
-def replacement_allowed(repo, release, tag, sha, replacement):
+def replacement_allowed(repo, release, tag, sha, replacement, *, old_tag=None):
     """Authorize only an explicitly named, unpublished, untagged ancestor draft.
 
     This does not mutate anything and does not waive any new-revision audit.
@@ -81,9 +82,13 @@ def replacement_allowed(repo, release, tag, sha, replacement):
     match = re.fullmatch(r'([1-9][0-9]*)@([0-9a-f]{40})', replacement or '')
     require(match is not None, 'existing draft targets another revision; explicit recovery required')
     identifier, old_sha = int(match[1]), match[2]
-    release_identity(release, tag, old_sha, draft=True)
+    expected_tag = tag if old_tag is None else old_tag
+    require(isinstance(expected_tag, str) and bool(expected_tag), 'invalid recovery tag')
+    release_identity(release, expected_tag, old_sha, draft=True)
     require(release['id'] == identifier and old_sha != sha, 'wrong recovery draft')
     require(tag_commit(repo, tag) is None, 'refusing to retarget an existing release tag')
+    if expected_tag != tag:
+        require(tag_commit(repo, expected_tag) is None, 'recovery draft has an existing tag')
     comparison = api(f'repos/{repo}/compare/{old_sha}...{sha}')
     require(comparison.get('status') == 'ahead'
             and comparison.get('merge_base_commit', {}).get('sha') == old_sha,
@@ -102,44 +107,100 @@ def check_uploaded_assets(release, output):
                 'uploaded asset checksum mismatch')
 
 
-def stage_and_publish(repo, sha, tag, output, existing, replacement=None):
-    """Called only after all exact-head workflow, evidence and package audits.
+def locate_release(repo, tag, sha, replacement=None, recovery_tag=None):
+    """Resolve a known placeholder draft only by an explicit ID/SHA/tag triple.
 
-    Work by numeric release ID. A recovery can only retarget an explicitly
-    named unpublished ancestor draft, after rechecking it and main. No public
-    release, existing tag or unknown draft is overwritten.
+    A tag-name mismatch never authorizes a new draft or a wildcard recovery.
+    Normal release discovery is unchanged once the draft has the intended tag.
+    """
+    existing = find_release(repo, tag)
+    if existing is None and recovery_tag is not None:
+        match = re.fullmatch(r'([1-9][0-9]*)@([0-9a-f]{40})', replacement or '')
+        require(match is not None, 'placeholder recovery requires ID@old revision')
+        existing = api(f'repos/{repo}/releases/{match[1]}')
+        replacement_allowed(repo, existing, tag, sha, replacement, old_tag=recovery_tag)
+    return existing
+
+
+def release_assets(repo, identifier):
+    """Read the entire asset collection by release ID, including drafts."""
+    result, page = [], 1
+    while True:
+        batch = api(f'repos/{repo}/releases/{identifier}/assets?per_page=100&page={page}')
+        require(isinstance(batch, list), 'invalid asset listing')
+        result.extend(batch)
+        if len(batch) < 100:
+            return result
+        page += 1
+
+
+def upload_assets_by_id(repo, identifier, output):
+    """Replace only expected assets of the checked draft; avoid tag lookups.
+
+    Retrying a partial upload is safe: identical bytes are retained, changed
+    expected files are replaced, and unknown or duplicate assets are rejected.
+    The final full listing is still size/digest verified before publication.
+    """
+    files = {p.name: p for p in output.iterdir() if p.is_file()}
+    assets = release_assets(repo, identifier)
+    require(len({a['name'] for a in assets}) == len(assets)
+            and {a['name'] for a in assets} <= set(files), 'unknown or duplicate draft assets')
+    indexed = {a['name']: a for a in assets}
+    for name, path in sorted(files.items()):
+        asset = indexed.get(name)
+        if asset is not None:
+            digest = 'sha256:'+hashlib.sha256(path.read_bytes()).hexdigest()
+            if (asset.get('state') == 'uploaded' and asset.get('size') == path.stat().st_size
+                    and asset.get('digest') == digest):
+                continue
+            require(type(asset.get('id')) is int and asset['id'] > 0, 'invalid asset ID')
+            gh('api', f'repos/{repo}/releases/assets/{asset["id"]}', '--method', 'DELETE')
+        gh('api', f'https://uploads.github.com/repos/{repo}/releases/{identifier}/assets?name={quote(name, safe="")}',
+           '--method', 'POST', '--header', 'Content-Type: application/octet-stream', '--input', str(path))
+
+
+def stage_and_publish(repo, sha, tag, output, existing, replacement=None, recovery_tag=None):
+    """Publish by numeric identity only after exact-head audits have passed.
+
+    Every metadata write explicitly retains the intended tag AND commit.
+    Omitting tag_name during a draft retarget caused the observed placeholder
+    tag and is covered by a stateful regression. No published tag is rewritten.
     """
     require(api(f'repos/{repo}/git/ref/heads/main')['object']['sha'] == sha,
             'main moved during audit')
     if existing is None:
-        require(find_release(repo, tag) is None, 'a release appeared during audit')
-        gh('release', 'create', tag, '--repo', repo, '--target', sha, '--draft',
-           '--title', 'v0.5.0 — explicit 4-Selmer groups over Q',
-           '--notes-file', str(ROOT/'docs/release-notes-v0.5.0.md'))
-        existing = find_release(repo, tag)
-        require(existing is not None, 'created draft was not found')
+        require(locate_release(repo, tag, sha, replacement, recovery_tag) is None,
+                'a release appeared during audit')
+        existing = api(f'repos/{repo}/releases', method='POST', payload={
+            'tag_name': tag, 'target_commitish': sha, 'draft': True, 'prerelease': False,
+            'name': 'v0.5.0 — explicit 4-Selmer groups over Q',
+            'body': (ROOT/'docs/release-notes-v0.5.0.md').read_text()})
     else:
         current = api(f'repos/{repo}/releases/{existing["id"]}')
         require(current['id'] == existing['id'], 'draft ID changed')
-        if current.get('target_commitish') != sha:
-            replacement_allowed(repo, current, tag, sha, replacement)
-            current = api(f'repos/{repo}/releases/{current["id"]}', method='PATCH',
-                          payload={'target_commitish': sha})
+        if current.get('target_commitish') != sha or current.get('tag_name') != tag:
+            replacement_allowed(repo, current, tag, sha, replacement,
+                                old_tag=recovery_tag if current.get('tag_name') != tag else None)
+            current = api(f'repos/{repo}/releases/{current["id"]}', method='PATCH', payload={
+                'tag_name': tag, 'target_commitish': sha, 'draft': True, 'prerelease': False})
         existing = current
     release_identity(existing, tag, sha, draft=True)
     identifier = existing['id']
     require(tag_commit(repo, tag) in (None, sha), 'release tag changed during audit')
-    gh('release', 'upload', tag, '--repo', repo, '--clobber', *map(str, sorted(output.iterdir())))
+    upload_assets_by_id(repo, identifier, output)
     draft = api(f'repos/{repo}/releases/{identifier}')
     release_identity(draft, tag, sha, draft=True)
+    draft['assets'] = release_assets(repo, identifier)
     check_uploaded_assets(draft, output)
     require(api(f'repos/{repo}/git/ref/heads/main')['object']['sha'] == sha,
             'main moved before publication')
     require(tag_commit(repo, tag) in (None, sha), 'release tag changed before publication')
-    api(f'repos/{repo}/releases/{identifier}', method='PATCH',
-        payload={'draft': False, 'make_latest': 'true'})
+    api(f'repos/{repo}/releases/{identifier}', method='PATCH', payload={
+        'tag_name': tag, 'target_commitish': sha, 'draft': False, 'prerelease': False,
+        'make_latest': 'true'})
     final = api(f'repos/{repo}/releases/{identifier}')
     release_identity(final, tag, sha, draft=False)
+    final['assets'] = release_assets(repo, identifier)
     check_uploaded_assets(final, output)
     require(tag_commit(repo, tag) == sha, 'published release tag mismatch')
     return final
@@ -184,7 +245,7 @@ def tag_commit(repo, tag):
     raise ValueError('excessively nested annotated tag')
 
 
-def publish(repo, sha, *, replacement=None):
+def publish(repo, sha, *, replacement=None, recovery_tag=None):
     require(re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo) is not None, 'invalid repository')
     require(re.fullmatch(r'[0-9a-f]{40}', sha) is not None, 'invalid revision')
     require(os.environ.get('GITHUB_REPOSITORY') == repo, 'wrong workflow repository')
@@ -202,10 +263,11 @@ def publish(repo, sha, *, replacement=None):
     tag = 'v'+version
     existing_tag = tag_commit(repo, tag)
     require(existing_tag in (None, sha), 'refusing to replace a release tag')
-    existing = find_release(repo, tag)
+    existing = locate_release(repo, tag, sha, replacement, recovery_tag)
     if existing is not None:
-        if existing.get('target_commitish') != sha:
-            replacement_allowed(repo, existing, tag, sha, replacement)
+        if existing.get('target_commitish') != sha or existing.get('tag_name') != tag:
+            replacement_allowed(repo, existing, tag, sha, replacement,
+                                old_tag=recovery_tag if existing.get('tag_name') != tag else None)
         if not existing['draft']:
             require(existing_tag == sha, 'published release tag mismatch')
             print(f'{tag} is already published at the verified revision {sha}.')
@@ -261,7 +323,7 @@ def publish(repo, sha, *, replacement=None):
         (output/'SHA256SUMS').write_text(''.join(
             f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n'
             for p in sorted(output.iterdir()) if p.name != 'SHA256SUMS'))
-        final = stage_and_publish(repo, sha, tag, output, existing, replacement)
+        final = stage_and_publish(repo, sha, tag, output, existing, replacement, recovery_tag)
         print(json.dumps({'published': True, 'tag': tag, 'revision': sha,
                           'url': final['html_url'], 'audit': report}, sort_keys=True))
 
@@ -271,5 +333,7 @@ if __name__ == '__main__':
     parser.add_argument('--repository', required=True)
     parser.add_argument('--revision', required=True)
     parser.add_argument('--replace-draft', help='Explicit unpublished draft recovery: numeric ID@old commit SHA')
+    parser.add_argument('--recover-draft-tag', help='Exact former tag of the explicitly named unpublished draft')
     args = parser.parse_args()
-    publish(args.repository, args.revision, replacement=args.replace_draft)
+    publish(args.repository, args.revision, replacement=args.replace_draft,
+            recovery_tag=args.recover_draft_tag)
