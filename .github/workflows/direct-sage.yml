@@ -1,0 +1,37 @@
+name: Pinned PR6 direct Sage benchmarks
+on:
+  push:
+    branches: [verification/pr6-direct-sage]
+permissions:
+  contents: read
+jobs:
+  direct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [full_two_and_four, split_nontrivial_radical]
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b2016354477ba185db2460b42f659a8c9d4322ea
+      - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - name: Direct benchmark without any Python diagnostic thread
+        run: /home/sage/sage/sage -python -u benchmarks/four_selmer_group.py --fixture ${{ matrix.fixture }} --verify > four-selmer-group-${{ matrix.fixture }}.jsonl
+      - name: Replay exact group evidence
+        run: /home/sage/sage/sage -python benchmarks/replay_four_group.py four-selmer-group-${{ matrix.fixture }}.jsonl > group-replay-${{ matrix.fixture }}.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: direct-original-${{ matrix.fixture }}
+          path: |
+            four-selmer-group-${{ matrix.fixture }}.jsonl
+            group-replay-${{ matrix.fixture }}.jsonl
