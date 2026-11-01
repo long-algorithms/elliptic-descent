@@ -54,7 +54,7 @@ def _prefer(candidate_score, current_score):
     return candidate_score[0] < current_score[0]
 
 
-def fibre_representative(selmer, coordinates, torsion):
+def fibre_representative(selmer, coordinates, torsion, *, initial_cover=None):
     """Select among fully verified presentations; never remove a class or a prime.
 
     The full conservative support is recomputed for each candidate presentation.
@@ -63,7 +63,10 @@ def fibre_representative(selmer, coordinates, torsion):
     support is NOT a reason to switch: smaller coefficients alone can hide
     much worse local reduction and cause an enormous lifting tree.
     """
-    best = selmer.quartic_cover(coordinates)
+    best = selmer.quartic_cover(coordinates) if initial_cover is None else initial_cover
+    if initial_cover is not None and (best.selmer is not selmer or best.coordinates != coordinates
+            or best.ambient_label != selmer.ambient_label(coordinates) or not best.verify()):
+        raise ValueError('initial quartic must represent this exact Selmer class and basis')
     if not coordinates or selmer.arithmetic.algebra.degrees != (1, 1, 1):
         return best
     entries = tuple(e for e in torsion.entries if e.point is not None and e.coordinates == coordinates)

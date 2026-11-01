@@ -38,7 +38,9 @@ jobs:
       matrix:
         include:
           - group: core
-            pytest_args: --ignore=tests/test_sage_four_selmer_group.py --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py --ignore=tests/test_sage_four_selmer_fibres.py
+            pytest_args: --ignore=tests/test_sage_descent_api.py --ignore=tests/test_sage_four_selmer_group.py --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py --ignore=tests/test_sage_four_selmer_fibres.py
+          - group: api
+            pytest_args: tests/test_sage_descent_api.py
           - group: pairing
             pytest_args: tests/test_sage_cassels_tate.py
           - group: radical
@@ -78,7 +80,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
       - name: Use the optional exact accelerator for group integration
-        if: startsWith(matrix.group, 'group-')
+        if: startsWith(matrix.group, 'group-') || matrix.group == 'api'
         run: |
           /home/sage/sage/sage -pip install 'python-flint==0.8.0'
           echo "SYMPY_GROUND_TYPES=flint" >> "$GITHUB_ENV"

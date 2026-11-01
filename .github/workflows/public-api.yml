@@ -1,0 +1,30 @@
+name: Public API audit
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [rank_one, split_two_torsion, zero_selmer, nontrivial_sha_571a1]
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - run: /home/sage/sage/sage -python benchmarks/public_api.py --fixture ${{ matrix.fixture }} --verify > public-api-${{ matrix.fixture }}.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-api-${{ matrix.fixture }}
+          path: public-api-${{ matrix.fixture }}.jsonl
