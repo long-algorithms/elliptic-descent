@@ -1,12 +1,7 @@
 name: Finite torsor audit
 on:
   push:
-    paths:
-      - 'src/**'
-      - 'tests/test_sage_origin_torsors.py'
-      - 'tests/test_sage_finite_torsors.py'
-      - 'benchmarks/finite_torsor_root_probe.py'
-      - '.github/workflows/finite-torsor-audit.yml'
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -15,8 +10,21 @@ concurrency:
   cancel-in-progress: true
 jobs:
   exact-origin-arithmetic:
+    name: origin (${{ matrix.case }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: split
+            test: tests/test_sage_origin_torsors.py::test_rational_origin_algebra_and_component_markings[split]
+          - case: two-quadratic
+            test: tests/test_sage_origin_torsors.py::test_rational_origin_algebra_and_component_markings[two_quadratic]
+          - case: irreducible
+            test: tests/test_sage_origin_torsors.py::test_rational_origin_algebra_and_component_markings[irreducible]
+          - case: contracted-sum
+            test: tests/test_sage_finite_torsors.py::test_rational_origin_action_and_sum_with_zero
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root
@@ -27,12 +35,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
-      - run: /home/sage/sage/sage -python -m pytest tests/test_sage_origin_torsors.py tests/test_sage_finite_torsors.py -v -s --durations=10 --junitxml=origin-torsors.xml
+      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest '${{ matrix.test }}' -x -v -s --durations=10 --junitxml=origin-${{ matrix.case }}.xml
       - run: /home/sage/sage/sage -python benchmarks/finite_torsor_root_probe.py > finite-torsor-roots.json
+        if: matrix.case == 'contracted-sum'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: finite-torsor-origin-audit
+          name: finite-torsor-origin-${{ matrix.case }}
           path: |
-            origin-torsors.xml
+            origin-${{ matrix.case }}.xml
             finite-torsor-roots.json
