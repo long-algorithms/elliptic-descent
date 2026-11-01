@@ -192,3 +192,34 @@ def test_failed_mathematical_inventory_prevents_any_draft_mutation(monkeypatch):
     monkeypatch.setattr(publisher,'stage_and_publish',lambda *a,**k: pytest.fail('mutation before audit'))
     with pytest.raises(ValueError, match='mathematical evidence'):
         publisher.publish('owner/repo',SHA,replacement='123@'+old)
+
+
+def test_every_release_gate_runs_on_main_without_path_filtering():
+    # A tooling/documentation-only merge must not strand the exact-head gate.
+    import re
+    from release_gate import WORKFLOWS
+    for name in WORKFLOWS:
+        text = (ROOT/'.github/workflows'/name).read_text()
+        match = re.search(r'^  push:\n((?:    .*\n)*)', text, re.M)
+        assert match is not None, name
+        block = match[1]
+        assert 'paths:' not in block and 'paths-ignore:' not in block, name
+        assert 'branches-ignore:' not in block, name
+        assert block.strip() == 'branches: [main]', name
+
+
+def test_group_replay_has_separate_budget_without_omitting_any_fixture():
+    import re
+    from release_gate import GROUPS
+    text = (ROOT/'.github/workflows/group-benchmarks.yml').read_text()
+    assert '  replay:\n' in text and '    needs: group\n' in text
+    assert text.count('    timeout-minutes: 20\n') == 2
+    matrices = re.findall(r'fixture: \[(.*?)\]', text)
+    assert len(matrices) == 2
+    assert all(set(v.strip() for v in m.split(',')) == set(GROUPS) for m in matrices)
+    assert 'benchmarks/four_selmer_group.py --fixture ${{ matrix.fixture }} --verify' in text
+    assert 'benchmarks/replay_four_group.py four-selmer-group-${{ matrix.fixture }}.jsonl' in text
+    assert 'name: group-construction-${{ matrix.fixture }}' in text
+    assert 'construction-${{ matrix.fixture }}.record' in text
+    assert 'name: group-${{ matrix.fixture }}' in text
+    assert 'uses: actions/download-artifact@v4' in text

@@ -1,10 +1,7 @@
 name: Relative arithmetic fixtures
 on:
   push:
-    paths:
-      - 'src/**'
-      - 'benchmarks/export_relative_arithmetic.py'
-      - '.github/workflows/relative-arithmetic.yml'
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:

@@ -1,6 +1,7 @@
 name: Public API audit
 on:
   push:
+    branches: [main]
   pull_request:
 permissions:
   contents: read
