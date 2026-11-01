@@ -12,6 +12,7 @@ from time import perf_counter
 
 from .arithmetic import nonnegative_integer
 from .galois_covering import GaloisGroupEvidence
+from .limits import FieldDegreeLimit
 
 
 def _key(key):
@@ -366,7 +367,7 @@ def four_selmer_group(fibres, *, backend='auto', max_field_degree=None, evidence
         if not isinstance(E,GaloisGroupEvidence) or not _bound_to_fibres(E,fibres) or not E.verify():
             raise ValueError('the Galois data do not certify these specific marked coverings')
         if max_field_degree is not None and E.torsion.field.degree>max_field_degree:
-            raise RuntimeError('the supplied field exceeds the requested degree cap')
+            raise FieldDegreeLimit(E.torsion.field.degree, max_field_degree)
         table = E.class_table
         law = FiniteClassLaw(table.keys,tuple(tuple(table.add_indices(i,j) for j in range(len(table.keys)))
                                              for i in range(len(table.keys))),table.zero_index)

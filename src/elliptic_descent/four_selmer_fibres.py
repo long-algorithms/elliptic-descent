@@ -150,7 +150,7 @@ class AssembledFibre:
                     return False
         return True
 
-    @property
+    @cached_property
     def classes(self):
         return tuple(GlobalFibreClass(self.coordinates,i,indices,
                       self.representative.marking.compose(self.models[indices[0]]))
@@ -288,7 +288,7 @@ class FourSelmerFibres:
             raise ArithmeticError('explicit orbits disagree with the exact sequence')
         return count
 
-    @property
+    @cached_property
     def known_classes(self):
         return tuple(c for f in self.fibres for c in f.classes)
 

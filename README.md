@@ -10,24 +10,35 @@ all everywhere locally soluble lifts, with explicit quadric equations and maps,
 up to the fixed-target equivalence specified below. Complete mode has no
 artificial candidate or local-search cutoff.
 
-This is **not** a full curve-level 4-Selmer-group computation, a Mordell–Weil
-rank algorithm, or a performance match for Magma. Automatic recovery of imported markings,
-full Selmer-group assembly, minimization/reduction, and practical point search
-remain separate milestones.
+The released v0.4 relative interface is not by itself a curve-level Selmer
+computation. The development interfaces below supply that integration; they
+are not an exact Mordell–Weil rank algorithm or a performance match for Magma.
+Automatic recovery of arbitrary imported markings, general minimization/reduction
+and practical point search remain separate work.
 
 ## v0.5 development
 
-Steps 1–5 provide labelled 2-Selmer classes, marked quartics, the Cassels–Tate
-pairing, and [global 4-Selmer fibres](docs/four-selmer-fibres.md). The proposed
-[sixth step](docs/four-selmer-group.md) adds actual group operations using exact
-covering cocycles, with invariant-factor generators and checked inclusion and
-projection maps. Its genuine Sage/CI acceptance gates are separate from local
-geometric replay. The package remains **0.4.0**; the integrated public workflow
-and final v0.5 release audit remain later steps.
+The [curve-level public API](docs/public-api.md) coordinates labelled 2-Selmer
+arithmetic, the Cassels–Tate pairing, global fibre equivalence and the exact
+4-Selmer group law. It retains marked covering representatives, intermediate
+evidence and conditional/partial status. `DescentSession` reuses arithmetic
+and constructed witnesses across staged or resumed calculations.
 
-The general group backend is deliberately a slow reference algorithm using a
-common normal number field. It does not assign an arbitrary group of the
-expected order to the existing covering list.
+```python
+from elliptic_descent import four_descent
+
+R = four_descent((0, 0, 0, 4, 0), proof=True)
+G = R.require_group(certified=True)
+assert G.invariant_factors == (4,)
+g = G.generators[0]
+assert 2*g == G.include_two_selmer(G.projection(g))
+print(g.covering.target)  # The user's original elliptic-curve model.
+```
+
+The package remains **0.4.0** until the final v0.5 audit and release.
+See the [eight-step plan](docs/v0.5-plan.md) for the remaining obligations.
+The lower-level relative solver still requires a genuine degree-four
+presentation; cubic conversion remains explicit.
 
 ## Install and run
 
@@ -147,6 +158,7 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 
 ## Documentation
 
+- [Curve-level API, staged computations and certification](docs/public-api.md)
 - [v0.4 release specification and audit guide](docs/v0.4.md)
 - [Relative descent: contract and completeness argument](docs/relative-descent.md)
 - [Two-quadratic descent: equivalence and independent checks](docs/two-quadratic-descent.md)
@@ -158,9 +170,10 @@ in-process repetitions, not cold-cache or cross-system speed comparisons.
 - [Full project completeness specification](docs/completeness.md)
 - [Changelog](CHANGELOG.md)
 
-All five degree-four factorization patterns are implemented. The next
-mathematical milestone is v0.5: the full curve-level 4-Selmer group, its
-operations, doubling map, pairing and torsion bookkeeping.
+All five degree-four factorization patterns are implemented. The development
+interfaces now connect the curve-level group, its operations, projection and
+inclusion maps, pairing and torsion bookkeeping. The final v0.5 release audit
+remains outstanding.
 
 ## References
 

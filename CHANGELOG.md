@@ -2,12 +2,18 @@
 
 ## Unreleased — v0.5 development
 
-- Propose exact group operations on assembled 4-Selmer classes via geometric
+- Add `four_descent` and `DescentSession` for the complete curve-level pipeline.
+- Distinguish intermediate completion, full-group completion, certification and assumptions.
+- Retain partial ledgers and earlier stages at explicit limits; add typed field-degree stops.
+- Reuse arithmetic, quartics, pairing entries, fibre witnesses and immutable class wrappers.
+- Add public-API documentation, genuine-Sage integration and work-count benchmarks.
+
+- Implement exact group operations on assembled 4-Selmer classes via geometric
   Galois cocycles and all E[4] coboundaries, not cardinality-only assignment.
 - Retain actual covering generators, invariant factors, relations and coordinates;
   check projection, kernel inclusion and doubling on every class.
 - Add portable normal-field/covering evidence and all-curve Sage acceptance gates.
-  These proposed changes require final-head Sage/CI verification before acceptance.
+  Retain the merged implementation's genuine-Sage and exact-replay regression gates.
 
 - Assemble global 4-Selmer fibres by verified rational 2-torsion actions on relative coverings.
 - Retain explicit equivalence matrices, projection, and the actual kernel injection from labelled Selmer-2 classes.
@@ -31,7 +37,7 @@
 - Construct the zero 2-Selmer class as multiplication by two on the original curve.
 - Preserve markings through relative descent, Sage normalization and verified imported-map adapters.
 - Add the eight-step v0.5 plan, exact regression tests, Sage comparisons and interface benchmarks.
-- Keep version 0.4.0; global group addition and invariant-factor generators remain later steps.
+- Keep version 0.4.0 pending the final integrated v0.5 release audit.
 
 ## 0.4.0 — All squarefree degree-four factorization types
 

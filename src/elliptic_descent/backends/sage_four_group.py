@@ -16,6 +16,7 @@ import sympy as sp
 
 from .sage import _sage
 from ..arithmetic import nonnegative_integer
+from ..limits import FieldDegreeLimit
 from ..galois_covering import (ExactGaloisField, FourTorsionCertificate,
                                CoverTrivialization, GaloisGroupEvidence, evidence_record)
 
@@ -116,7 +117,7 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
     if any(embedding(v)!=a for v,a in zip(values,numbers)):
         raise ArithmeticError('common number-field conversion changed an algebraic value')
     if cap is not None and K.degree()>cap:
-        raise RuntimeError(f'common field degree {K.degree()} exceeds the requested cap {cap}')
+        raise FieldDegreeLimit(int(K.degree()), cap)
     _progress('computing common-field automorphisms')
     automorphisms = tuple(K.automorphisms())
     if len(automorphisms)==K.degree():
@@ -129,7 +130,7 @@ def discover_group_evidence(fibres, *, max_field_degree=None):
     n = int(L.degree())
     _progress(f'normal field degree {n}; exporting certificate')
     if cap is not None and n>cap:
-        raise RuntimeError(f'normal closure degree {n} exceeds the requested cap {cap}')
+        raise FieldDegreeLimit(int(n), cap)
     if len(automorphisms)!=n:
         raise ArithmeticError('normal closure did not supply every automorphism')
     def pack(v):
