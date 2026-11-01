@@ -19,6 +19,7 @@ Documentation = "https://github.com/long-algorithms/elliptic-descent/blob/main/d
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]
+fast = ["python-flint>=0.6,<0.9"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

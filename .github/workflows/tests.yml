@@ -77,6 +77,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
+      - name: Use the optional exact accelerator for group integration
+        if: startsWith(matrix.group, 'group-')
+        run: |
+          /home/sage/sage/sage -pip install 'python-flint==0.8.0'
+          echo "SYMPY_GROUND_TYPES=flint" >> "$GITHUB_ENV"
       - run: /home/sage/sage/sage -python -c "import sage.all; import sympy; print(sage.all.version())"
       # Disjoint groups cover the entire suite; no test is disabled or relaxed.
       - run: /home/sage/sage/sage -python -u -m pytest -vv -s --durations=20 --junitxml=sage-${{ matrix.group }}.xml ${{ matrix.pytest_args }}
@@ -126,3 +131,29 @@ jobs:
             selmer-quartics-results.jsonl
             cassels-tate-results.jsonl
             pairing-replay.json
+
+  exact-backends:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[test,fast]' 'python-flint==0.8.0'
+      - run: python benchmarks/compare_exact_backends.py > exact-backends.json
+      - run: python -m pytest -q --junitxml=python-flint.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: exact-backends
+          path: |
+            exact-backends.json
+            python-flint.xml
+      - name: Retain the exact accelerator wheel for independent local replay
+        run: |
+          python -m pip download --no-deps --only-binary=:all: 'python-flint==0.8.0' --dest accelerator-wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exact-accelerator-wheel
+          path: accelerator-wheel/*.whl

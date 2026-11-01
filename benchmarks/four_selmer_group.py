@@ -31,6 +31,12 @@ def main():
     if args.repeats<1:
         parser.error('--repeats must be positive')
     from sage.env import SAGE_VERSION
+    from sympy.external.gmpy import GROUND_TYPES
+    try:
+        import flint
+        flint_version = flint.__version__
+    except ImportError:
+        flint_version = None
     names=tuple(FIXTURES) if args.fixture=='all' else (args.fixture,)
     for name in names:
         for rep in range(args.repeats):
@@ -63,6 +69,7 @@ def main():
                     'global_keys':[C.key for C in F.known_classes],'zero_class_key':F.zero_class.key}
             record={**metadata(),'package_version':__version__,'sage':SAGE_VERSION,
                     'fixture':name,'repetition':rep,'scope':'full group law on assembled marked 4-Selmer classes',
+                    'sympy_ground_types':GROUND_TYPES,'python_flint':flint_version,
                     'method':G.method,'keys':G.law.keys,'addition_table':G.law.table,'zero_index':G.law.zero,
                     'invariant_factors':G.invariant_factors,'generator_keys':[a.key for a in G.generators],
                     'relations':G.relations,'complete':G.complete,'certified':G.certified,
