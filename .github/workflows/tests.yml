@@ -79,7 +79,7 @@ jobs:
       - run: /home/sage/sage/sage -pip install -e '.[test]'
       - run: /home/sage/sage/sage -python -c "import sage.all; import sympy; print(sage.all.version())"
       # Disjoint groups cover the entire suite; no test is disabled or relaxed.
-      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py module pytest -vv -s --durations=20 --junitxml=sage-${{ matrix.group }}.xml ${{ matrix.pytest_args }}
+      - run: /home/sage/sage/sage -python -u -m pytest -vv -s --durations=20 --junitxml=sage-${{ matrix.group }}.xml ${{ matrix.pytest_args }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

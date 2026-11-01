@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: /home/sage/sage/sage -pip install -e '.[test]'
-      - run: /home/sage/sage/sage -python -u tools/diagnose_run.py script benchmarks/four_selmer_group.py --fixture ${{ matrix.fixture }} --verify > four-selmer-group-${{ matrix.fixture }}.jsonl
+      - run: /home/sage/sage/sage -python -u benchmarks/four_selmer_group.py --fixture ${{ matrix.fixture }} --verify > four-selmer-group-${{ matrix.fixture }}.jsonl
       - run: /home/sage/sage/sage -python benchmarks/replay_four_group.py four-selmer-group-${{ matrix.fixture }}.jsonl > group-replay-${{ matrix.fixture }}.jsonl
       - uses: actions/upload-artifact@v4
         if: always()
