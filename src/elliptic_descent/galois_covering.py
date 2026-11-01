@@ -80,7 +80,9 @@ class ExactGaloisField:
         coefficients = _rational_tuple(coefficients)
         if len(coefficients) != self.degree:
             raise ValueError('field element has the wrong power-basis length')
-        return polynomial_value(tuple(self.rational(c) for c in coefficients),self.generator,self.zero)
+        # Coefficients already specify the power basis; Horner evaluation would
+        # perform degree-many unnecessary algebraic multiplications.
+        return self.domain.new([self.domain.dom.convert(c) for c in reversed(coefficients)])
 
     def pack(self, value):
         values = tuple(sp.Rational(c.numerator,c.denominator) for c in reversed(value.to_list()))
@@ -90,10 +92,35 @@ class ExactGaloisField:
     def images(self):
         return tuple(self.unpack(v) for v in self.automorphism_images)
 
+    @cached_property
+    def _automorphism_columns(self):
+        # Computed on demand. These are exact rational linear maps, not inferred
+        # numerical automorphisms; verify() still checks every supplied image.
+        return {}
+
     def apply(self, index, value):
         if type(index) is not int or not 0 <= index < len(self.images):
             raise ValueError('invalid field automorphism index')
-        return polynomial_value(tuple(self.rational(c) for c in self.pack(value)),self.images[index],self.zero)
+        image = self.images[index]
+        coefficients = tuple(reversed(value.to_list()))
+        if image == self.generator or len(coefficients) <= 1:
+            return value
+        columns = self._automorphism_columns.get(index)
+        if columns is None:
+            powers, power = [], self.one
+            for _ in range(self.degree):
+                column = tuple(reversed(power.to_list()))
+                powers.append(column+(self.domain.dom.zero,)*(self.degree-len(column)))
+                power *= image
+            columns = tuple(powers)
+            self._automorphism_columns[index] = columns
+        result = [self.domain.dom.zero]*self.degree
+        for scalar, column in zip(coefficients, columns):
+            if scalar:
+                for i, c in enumerate(column):
+                    if c:
+                        result[i] += scalar*c
+        return self.domain.new(list(reversed(result)))
 
     @cached_property
     def transitions(self):
@@ -245,6 +272,9 @@ class CoverTrivialization:
     roots_squared: tuple
 
     def _data(self, torsion):
+        cache = self.__dict__.get('_evaluated_data')
+        if cache is not None and cache[0] is torsion:
+            return cache[1]
         F = torsion.field
         f = tuple(F.rational(c) for c in self.f)
         xi = tuple(F.rational(c) for c in self.xi)
@@ -259,10 +289,15 @@ class CoverTrivialization:
         xia = polynomial_value(xi,alpha,F.zero)
         delta = tuple((s-v)*polynomial_value(xi,b,F.zero)/xia for v,b in zip(j,beta))
         roots = tuple(F.unpack(v) for v in self.roots_squared)
-        return f,xi,alpha,r,u,first,s,beta,xia,delta,roots
+        result = f,xi,alpha,r,u,first,s,beta,xia,delta,roots
+        object.__setattr__(self, '_evaluated_data', (torsion, result))
+        return result
 
     def origin(self, torsion):
         """Exact Lagrange interpolation: U(alpha)=0, U(beta_i)=1/sqrt(delta_i)."""
+        cache = self.__dict__.get('_evaluated_origin')
+        if cache is not None and cache[0] is torsion:
+            return cache[1]
         F = torsion.field
         _,_,alpha,_,_,_,_,beta,_,_,roots = self._data(torsion)
         nodes = (alpha,*beta)
@@ -281,7 +316,9 @@ class CoverTrivialization:
                 p = q;denominator *= node-other
             for k,c in enumerate(p):
                 result[k] += value*c/denominator
-        return tuple(result)
+        result = tuple(result)
+        object.__setattr__(self, '_evaluated_origin', (torsion, result))
+        return result
 
     def verify(self, torsion):
         try:
