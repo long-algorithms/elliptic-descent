@@ -1,0 +1,39 @@
+name: Four-Selmer group audit
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  group:
+    name: group (${{ matrix.fixture }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [rank_one, split_two_torsion, cyclic_two_torsion, cyclic_four_torsion, full_two_and_four, zero_selmer, nontrivial_sha_571a1, split_nontrivial_radical]
+    container:
+      image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
+      options: --user root
+    env:
+      ELLIPTIC_DESCENT_REQUIRE_SAGE: '1'
+      SYMPY_GROUND_TYPES: flint
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      ELLIPTIC_DESCENT_GROUP_SNAPSHOT: group-discovery-${{ matrix.fixture }}.json
+    steps:
+      - uses: actions/checkout@v4
+      - run: /home/sage/sage/sage -pip install -e '.[test,fast]' 'python-flint==0.8.0'
+      - name: Confirm exact FLINT ground domain
+        run: /home/sage/sage/sage -python -c "import flint; from sympy.external.gmpy import GROUND_TYPES; assert GROUND_TYPES == 'flint'; print(flint.__version__)"
+      - run: /home/sage/sage/sage -python -u benchmarks/four_selmer_group.py --fixture ${{ matrix.fixture }} --verify > four-selmer-group-${{ matrix.fixture }}.jsonl
+      - run: /home/sage/sage/sage -python benchmarks/replay_four_group.py four-selmer-group-${{ matrix.fixture }}.jsonl > group-replay-${{ matrix.fixture }}.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: group-${{ matrix.fixture }}
+          path: |
+            four-selmer-group-${{ matrix.fixture }}.jsonl
+            group-replay-${{ matrix.fixture }}.jsonl
+            group-discovery-${{ matrix.fixture }}.json

@@ -17,13 +17,17 @@ remain separate milestones.
 
 ## v0.5 development
 
-The first five steps provide marked curve interfaces, labelled 2-Selmer arithmetic,
-marked quartics for arbitrary classes, the Cassels–Tate pairing, and
-[global 4-Selmer fibre assembly](docs/four-selmer-fibres.md). The assembler
-retains actual rational-torsion actions, explicit covering-equivalence matrices,
-and the kernel/projection maps. It does not merely divide covering counts.
-Global group addition and invariant-factor generators remain the next step in
-the [v0.5 plan](docs/v0.5-plan.md). The package stays **0.4.0** during development.
+Steps 1–5 provide labelled 2-Selmer classes, marked quartics, the Cassels–Tate
+pairing, and [global 4-Selmer fibres](docs/four-selmer-fibres.md). The proposed
+[sixth step](docs/four-selmer-group.md) adds actual group operations using exact
+covering cocycles, with invariant-factor generators and checked inclusion and
+projection maps. Its genuine Sage/CI acceptance gates are separate from local
+geometric replay. The package remains **0.4.0**; the integrated public workflow
+and final v0.5 release audit remain later steps.
+
+The general group backend is deliberately a slow reference algorithm using a
+common normal number field. It does not assign an arbitrary group of the
+expected order to the existing covering list.
 
 ## Install and run
 
