@@ -75,5 +75,5 @@ def test_missing_duplicate_or_mislabelled_corpora_are_not_passes():
 
 def test_runtime_metadata_and_release_document_agree():
     version = re.search(r'^version = "([^"]+)"', (ROOT/'pyproject.toml').read_text(), re.M).group(1)
-    assert version == __version__ == '0.4.0'
-    assert '# v0.4.0' in (ROOT/'docs/v0.4.md').read_text()
+    assert version == __version__ == '0.5.0'
+    assert '# v0.5.0' in (ROOT/'docs/v0.5.md').read_text()

@@ -25,7 +25,7 @@ jobs:
           from pathlib import Path
           import os
           import elliptic_descent as ed
-          assert ed.__version__ == version('elliptic-descent') == '0.4.0'
+          assert ed.__version__ == version('elliptic-descent') == '0.5.0'
           assert not Path(ed.__file__).resolve().is_relative_to(Path(os.environ['GITHUB_WORKSPACE']).resolve())
           D = ed.construct_four_cover((1,-1,0,0,1), (0,-1,0,0))
           assert D.check_construction()
@@ -38,7 +38,7 @@ jobs:
         run: python -m pip wheel --no-deps --no-build-isolation dist/*.tar.gz --wheel-dir rebuilt
       - uses: actions/upload-artifact@v4
         with:
-          name: elliptic-descent-0.4.0-distributions
+          name: elliptic-descent-0.5.0-distributions
           path: dist/*
   minimum-sympy:
     runs-on: ubuntu-latest

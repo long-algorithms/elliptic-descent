@@ -1,11 +1,13 @@
 # What “complete 4-descent” means
 
-**v0.4.0 completes relative descent for all five squarefree degree-four
-factorization types over Q**, with the canonical marking and fixed-target
-equivalence. See [the release contract and acceptance checks](v0.4.md),
-[the baseline argument](relative-descent.md), [two-quadratic descent](two-quadratic-descent.md),
-and [rational-root descent](rational-root-descent.md). Cubic presentations are
-not silently converted. Full curve-level 4-Selmer computation is the next gate.
+**v0.5.0 provides full curve-level 4-Selmer computation over Q**, including
+marked representatives, group operations and the exact-sequence maps. See
+[the release contract and audit](v0.5.md) and [the public API](public-api.md).
+The complete relative interface from [v0.4](v0.4.md) remains available for
+all five squarefree degree-four factorization types. Its construction arguments
+are retained in [relative descent](relative-descent.md),
+[two-quadratic descent](two-quadratic-descent.md) and
+[rational-root descent](rational-root-descent.md).
 
 ## Objects, levels, and equivalence
 
@@ -121,9 +123,9 @@ Mordell–Weil basis, or triviality of `Sha(E)[4]`.
 - **v0.3 — complete irreducible-quartic relative 4-descent (completed):** soundness,
   exhaustiveness, nonredundancy, and unconditional certification for supported
   nonsingular irreducible quartics; positive and empty descent tests.
-- **v0.4 — every nonsingular degree-four factorization type (current):** `4`, `3+1`, `2+2`,
+- **v0.4 — every nonsingular degree-four factorization type (completed):** `4`, `3+1`, `2+2`,
   `2+1+1`, `1+1+1+1` with consistent covering equivalence and torsion cases.
-- **v0.5 — curve-level full 4-Selmer:** group, doubling, Cassels pairing,
+- **v0.5 — curve-level full 4-Selmer (release-gated):** group, doubling, Cassels pairing,
   exact torsion bookkeeping, corresponding coverings for all relevant classes.
 - **v1.0 — practical full 4-descent over Q:** all previous gates, plus robust
   minimization/reduction, point search, and reproducible certified benchmarks.

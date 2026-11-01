@@ -35,7 +35,7 @@ __all__ = [
     "assemble_four_selmer_fibres", "FourSelmerFibres",
 ]
 __all__ += ["four_selmer_group", "FourSelmerGroup", "FourSelmerElement"]
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from .descent import four_descent, DescentSession, DescentLimits, DescentStage, FourDescentResult
 from .limits import FieldDegreeLimit

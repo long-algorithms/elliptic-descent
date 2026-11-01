@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elliptic-descent"
-version = "0.4.0"
-description = "Certified relative 4-descent for squarefree quartics over the rationals"
+version = "0.5.0"
+description = "Explicit 4-Selmer groups, marked coverings and certified descent over the rationals"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -15,7 +15,7 @@ dependencies = ["sympy>=1.13,<2"]
 
 [project.urls]
 Repository = "https://github.com/long-algorithms/elliptic-descent"
-Documentation = "https://github.com/long-algorithms/elliptic-descent/blob/main/docs/v0.4.md"
+Documentation = "https://github.com/long-algorithms/elliptic-descent/blob/main/docs/v0.5.md"
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]

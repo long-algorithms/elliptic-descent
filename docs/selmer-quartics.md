@@ -3,7 +3,7 @@
 `S.quartic_cover(c)` now constructs a binary-quartic 2-covering for **any vector**
 of a complete labelled `two_selmer` result: zero, a basis vector, or any sum.
 The arithmetic label, inverse presentation maps and exact map to the user's
-original elliptic curve are retained. The package remains **0.4.0**; this step
+original elliptic curve are retained. This component is included in [v0.5.0](v0.5.md); it
 does not compute the Cassels–Tate pairing or assemble the global 4-Selmer group.
 
 ## From the labelled auxiliary model to a quartic
@@ -212,8 +212,9 @@ can yield large coefficients; general minimization/reduction is not implemented
 here. Failure of a backend, memory or runtime resources raises or leaves a parent
 computation partial; it never justifies dropping a class.
 
-The next step is the labelled Cassels–Tate pairing and its radical. Global fibre
-equivalence, 4-Selmer group operations and the curve-level API remain later steps.
+The [labelled pairing](cassels-tate.md), [global fibre equivalence](four-selmer-fibres.md),
+[group operations](four-selmer-group.md) and [curve-level API](public-api.md)
+provide the subsequent stages in the released pipeline.
 
 ## Primary references and conventions
 

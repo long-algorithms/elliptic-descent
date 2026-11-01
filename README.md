@@ -1,179 +1,128 @@
 # elliptic-descent
 
-Exact, testable algorithms for elliptic-curve descent over the rational numbers.
+**v0.5.0: explicit 4-Selmer groups and marked coverings over the rationals.**
 
-**v0.4.0: complete relative 4-descent for every squarefree degree-four quartic over Q.**
-The [release specification and audit guide](docs/v0.4.md) records the supported
-domain, verification requirements, distribution checks and trust boundary.
-Given a quartic 2-covering with its canonical map to its Jacobian, it enumerates
-all everywhere locally soluble lifts, with explicit quadric equations and maps,
-up to the fixed-target equivalence specified below. Complete mode has no
-artificial candidate or local-search cutoff.
+The curve-level API computes the labelled 2-Selmer group, Cassels–Tate pairing,
+global 4-Selmer classes and their group law. It returns generators, invariant
+factors, relations, coordinates and explicit covering maps to the original
+elliptic curve. Exact evidence, arithmetic assumptions and partial results are
+retained throughout. See the [release contract and audit](docs/v0.5.md).
 
-The released v0.4 relative interface is not by itself a curve-level Selmer
-computation. The development interfaces below supply that integration; they
-are not an exact Mordell–Weil rank algorithm or a performance match for Magma.
-Automatic recovery of arbitrary imported markings, general minimization/reduction
-and practical point search remain separate work.
+This is an exact reference implementation, not an exact Mordell–Weil rank or
+saturation algorithm, a general minimization/point-search package, or a claimed
+performance match for Magma. Difficult number fields and local calculations can
+require substantial time and memory.
 
-## v0.5 development
+## Install and run
 
-The [curve-level public API](docs/public-api.md) coordinates labelled 2-Selmer
-arithmetic, the Cassels–Tate pairing, global fibre equivalence and the exact
-4-Selmer group law. It retains marked covering representatives, intermediate
-evidence and conditional/partial status. `DescentSession` reuses arithmetic
-and constructed witnesses across staged or resumed calculations.
+Full descent requires SageMath. From a checkout of the release:
+
+```sh
+sage -pip install '.[test]'
+ELLIPTIC_DESCENT_REQUIRE_SAGE=1 sage -python -m pytest -q
+```
+
+A downloaded release wheel can instead be installed with
+`sage -pip install ./elliptic_descent-0.5.0-py3-none-any.whl`.
+The optional `fast` extra enables exact FLINT acceleration; it does not change
+proof requirements. Pure geometry, evidence replay and many tests also run with
+Python 3.10+ and SymPy without Sage. The package is not being published to PyPI
+by this release process.
+
+Run examples under Sage's Python, not its preparser:
 
 ```python
 from elliptic_descent import four_descent
 
-R = four_descent((0, 0, 0, 4, 0), proof=True)
+R = four_descent((0, 0, 0, 4, 0), proof=True)  # y^2 = x^3 + 4*x
 G = R.require_group(certified=True)
 assert G.invariant_factors == (4,)
 g = G.generators[0]
+assert g.order() == 4 and 4*g == G.zero
 assert 2*g == G.include_two_selmer(G.projection(g))
+assert R.covering(g.key) is g.covering
 print(g.covering.target)  # The user's original elliptic-curve model.
 ```
 
-The package remains **0.4.0** until the final v0.5 audit and release.
-See the [eight-step plan](docs/v0.5-plan.md) for the remaining obligations.
-The lower-level relative solver still requires a genuine degree-four
-presentation; cubic conversion remains explicit.
+## Stages, reuse and certification
 
-## Install and run
+`DescentSession` reuses arithmetic contexts, completed decisions and constructed
+coverings. `finished` means the requested stage completed; `complete` means the
+full group was constructed; `certified` additionally requires unconditional
+arithmetic and a fresh evidence check. Verification verdicts are not cached.
 
-The complete descent requires SageMath. Library files use ordinary Python
-syntax; the geometry and local reference kernels also run with Python 3.10+
-and SymPy without Sage.
+```python
+from elliptic_descent import DescentSession, DescentLimits
 
-```sh
-sage -pip install -e '.[test]'
-ELLIPTIC_DESCENT_REQUIRE_SAGE=1 sage -python -m pytest -q
-sage -python benchmarks/relative.py --verify --repeats 1
+session = DescentSession((0, 0, 0, -1, 1), proof=True)
+partial = session.run(limits=DescentLimits(two_selmer_candidates=0))
+assert not partial.complete
+result = session.run()  # Resume with no artificial candidate limit.
 ```
+
+Explicit limits preserve partial ledgers; unknown is never silently replaced
+by insolubility. `proof=False` retains any number-field assumptions. Later
+unconditional work cannot erase an earlier conditional dependency. Sessions
+are in-memory workspaces, not durable checkpoints or thread-safe global caches.
+See [the public API](docs/public-api.md) for the full status and budget contract.
+
+## Relative descent remains available
+
+The lower-level solver handles every squarefree **degree-four** quartic over Q:
 
 ```python
 from elliptic_descent import relative_four_descent
 
-# Ascending coefficients: -7*x^4 + 12*x^3 + 20*x^2 - 120*x + 172.
-result = relative_four_descent((172, -120, 20, 12, -7), proof=True)
-assert result.complete and result.certified
-assert result.verify_evidence()
-
-print(result.source.ainvs)                 # Canonical Jacobian model
-print(len(result.unoriented_coverings))    # 1, as in the published Magma example
-print(len(result.coverings))               # 2 maps to the fixed quartic
-D = result.coverings[0]
+R = relative_four_descent((172, -120, 20, 12, -7), proof=True)
+assert R.complete and R.certified and R.verify_evidence()
+D = R.coverings[0]
 print(D.quadrics)
-print(D.map_xyz)                           # Degree-4 map D -> quartic
-print(result.source.compose(D))            # Degree-16 map D -> Jacobian
+print(D.map_xyz)  # Degree-four map to the specified intermediate quartic.
 ```
 
-### Precisely what is counted
+Here `coverings` counts diagrams over a fixed quartic, not global classes over
+an elliptic curve. For factor types `4` and `2+2`, both map orientations are
+retained; a rational-root involution identifies them in the other three types.
+`unoriented_coverings` is the further quotient by the quartic involution.
+The curve-level API separately performs the verified rational-torsion orbit
+quotient and exact-sequence accounting. See [global fibres](docs/four-selmer-fibres.md)
+and the retained [v0.4 relative contract](docs/v0.4.md).
 
-`result.coverings` returns one representative per fixed-target covering class.
-For types `4` and `2+2`, the two map orientations are inequivalent and both are
-retained. When there is a rational root, an exact norm-minus-one CRT involution
-identifies those orientations, so only one is returned. The witness is exposed
-through `result.orientation.identification(model)`.
+Cubic presentation conversion is explicit through `CubicToQuartic`; a cubic is
+not silently treated as a quartic algebra. Singular curves, inexact inputs and
+unsupported base fields are rejected.
 
-`result.unoriented_coverings` is the additional quotient by the target involution
-`(X:Y:Z) -> (X:-Y:Z)`. Its size is half that of `coverings` for types `4` and
-`2+2`, and equal for the three rational-root patterns. No other target
-automorphisms, rational torsion translations or factor permutations are
-silently quotiented. See [rational-root descent](docs/rational-root-descent.md)
-for the exact equivalence and marked Jacobian identification.
-
-Inputs are five exact rational coefficients or a `QuarticTwoCover` object.
-The canonical quartic-to-Jacobian map is part of that object. An independently
-supplied elliptic-curve model requires an explicit isomorphism before its
-coordinates can be compared; it is not silently inferred from a label.
-
-### Complete versus bounded calculations
-
-```python
-partial = relative_four_descent((1, -1, 0, 0, 1), max_candidates=1,
-                                max_nodes=10_000, max_depth=8)
-print(partial.enumeration_complete, partial.complete, partial.certified)
-print(len(partial.unresolved))
-```
-
-With no limits, every finite quotient class and required local place is decided
-on the supported smooth domain. Explicit limits can return a partial result;
-`unknown` is never converted to insolubility. A returned empty list certifies
-an empty relative descent only when `certified` is true. The input quartic
-need not itself be locally soluble, so interpreting an empty result in terms
-of Sha requires that additional information.
-
-`proof=True` explicitly requests Sage's unconditional number-field arithmetic.
-`proof=False` retains a GRH assumption for nonrational field factors. Fully
-split rational arithmetic has no class-group dependency and can remain certified.
-`candidate_space` retains the affine enumeration, and `accounting_consistent`
-checks unique labels, membership and counts. `verify_evidence()` checks exact
-geometric/local evidence, not a second
-independent class-group computation. Its separate verification budget may be
-insufficient; failure to verify is not a proof of solubility.
-
-## Implemented components
-
-| Component | Capability |
-|---|---|
-| Geometry | Exact norm-pair construction, maps, independent norm-form and polynomial audits |
-| Arithmetic | Sage field/product square classes, class-group contribution, norm fibre, diagonal scalar quotient |
-| Equivalence | Fixed-target classes, with exact orientation-identification witnesses for rational-root types |
-| Real place | Complete exact sign test using isolated roots, including zero, two, or four real roots |
-| Finite places | Terminating smooth-model search, exact eliminants and linear lifts, verified integral model changes |
-| Certificates | Hensel witnesses, independent modular obstruction checks, real signs and model transformations |
-| Integration | Canonical Jacobian maps and optional PARI `ell2cover` model/map import |
-
-The earlier bounded routines remain available as independent reference paths.
-They are not silently relabelled complete. The geometric constructor handles
-all squarefree degree-four quartics, and **relative descent** now supports
-all five factorization patterns. The low-level API rejects degree-three inputs;
-use the explicit `CubicToQuartic` adapter for those presentations. Singular
-inputs remain rejected. Large-prime
-certification uses Sage/PARI rather than accepting probable primes. Runtime and memory can still be substantial on difficult inputs.
-
-## Tests and benchmarks
+## Validation and benchmarks
 
 ```sh
-# Python-only kernels; Sage test modules are explicitly skipped.
-python -m pip install -e '.[test]'
-python -m pytest -q
-python benchmarks/geometry.py --repeats 3 --verify
-python benchmarks/foundation.py --repeats 3 --verify
-
-# Complete end-to-end benchmark corpus, including independently checked obstructions.
-sage -python benchmarks/relative.py --fixture all --verify --repeats 3
-sage -python benchmarks/two_quadratic.py --verify --repeats 3
-sage -python benchmarks/rational_root.py --verify --repeats 3
+sage -python benchmarks/four_selmer_group.py --verify > groups.jsonl
+python benchmarks/replay_four_group.py groups.jsonl
+sage -python benchmarks/independent_mw.py --fixture all
+sage -python benchmarks/public_api.py --verify
 ```
 
-CI tests Python 3.10 and 3.13 plus a digest-pinned Sage 10.6 environment.
-The Sage job requires its integration tests and exports JSONL benchmarks.
-Records separate solver and verification times, arithmetic and local stages,
-proof assumptions, quotient counts, unresolved cases, coefficient sizes,
-local work, model changes, environment and process peak memory. These are
-in-process repetitions, not cold-cache or cross-system speed comparisons.
+CI retains the complete relative, arithmetic, local, pairing, fibre, group and
+API regression suites, Python-version and minimum-SymPy checks, and wheel/sdist
+audits. Six independently bounded rational quotients check group structure;
+four also compare every named covering and sum using rational points and exact
+Sage division tests. This is distinct from replaying our own geometric evidence.
+Published Magma examples and eclib/PARI comparisons remain in the corpus; no
+new live Magma comparison or external mathematical review is claimed.
+
+Release assets include the wheel, source distribution, checksums and a
+single-revision verification bundle. Publication requires every named workflow,
+all expected benchmark fixtures and the installed-distribution audit to pass.
+The [release guide](docs/v0.5.md) distinguishes independent checks, shared-kernel
+comparisons and portable evidence replay. Passing tests are not formal
+verification or an independent computation of every number-field class group.
 
 ## Documentation
 
-- [Curve-level API, staged computations and certification](docs/public-api.md)
-- [v0.4 release specification and audit guide](docs/v0.4.md)
-- [Relative descent: contract and completeness argument](docs/relative-descent.md)
-- [Two-quadratic descent: equivalence and independent checks](docs/two-quadratic-descent.md)
-- [Rational-root descent and marked Jacobian maps](docs/rational-root-descent.md)
-- [v0.3 acceptance and regression corpus](docs/v0.3.md)
-- [Construction and conventions](docs/algorithm.md)
-- [Finite-support arithmetic](docs/arithmetic.md)
-- [Reference local algorithms](docs/local.md)
-- [Full project completeness specification](docs/completeness.md)
-- [Changelog](CHANGELOG.md)
-
-All five degree-four factorization patterns are implemented. The development
-interfaces now connect the curve-level group, its operations, projection and
-inclusion maps, pairing and torsion bookkeeping. The final v0.5 release audit
-remains outstanding.
+- [v0.5 release contract, independent checks and audit](docs/v0.5.md)
+- [Public API and certification](docs/public-api.md)
+- [Labelled 2-Selmer arithmetic](docs/two-selmer.md), [quartic representatives](docs/selmer-quartics.md) and [pairing](docs/cassels-tate.md)
+- [Global fibres](docs/four-selmer-fibres.md) and [exact group arithmetic](docs/four-selmer-group.md)
+- [Completeness specification](docs/completeness.md), [development milestones](docs/v0.5-plan.md) and [changelog](CHANGELOG.md)
 
 ## References
 

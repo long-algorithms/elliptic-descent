@@ -2,7 +2,7 @@
 
 `cassels_tate_pairing(S)` computes the alternating pairing on a complete labelled
 2-Selmer space over Q, in the **same basis as S**, together with local evidence
-and its radical. The package version remains **0.4.0**. This step identifies the
+and its radical. This component is included in [v0.5.0](v0.5.md). It identifies the
 subspace that lifts to the 4-Selmer group; it does not construct that group,
 identify global fibre equivalences, or determine a Mordell–Weil basis.
 
@@ -209,7 +209,7 @@ by independent evaluation checks. This is not formal verification or an external
 mathematical review. No live Magma run or cross-system speed superiority is
 claimed. Large coefficients and slow exhaustive local searches remain possible.
 
-The next step is **global fibre assembly and equivalence**, with the actual
+The [global fibre layer](four-selmer-fibres.md) supplies the actual
 rational-torsion action and Selmer maps. Knowing the radical alone is insufficient
 to distinguish different extensions or determine the 4-Selmer group law.
 

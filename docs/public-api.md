@@ -1,9 +1,9 @@
 # Curve-level public API — v0.5 development step 7
 
-The development API accepts an exact rational elliptic curve and coordinates
+The public API accepts an exact rational elliptic curve and coordinates
 the labelled 2-Selmer computation, Cassels–Tate pairing, global fibre assembly,
-and explicit 4-Selmer group law. The package remains **0.4.0** pending the final
-v0.5 release audit. The lower-level interfaces remain available unchanged.
+and explicit 4-Selmer group law. See the [v0.5.0 release contract](v0.5.md).
+The lower-level interfaces remain available unchanged.
 
 ## One call, with all intermediate evidence retained
 
@@ -194,7 +194,7 @@ minimum-dependency checks and distribution audits remain enabled.
 Certified number-field completeness still relies on Sage. Exact geometric
 and cohomological evidence is checked by the existing verifiers. The API adds
 no new arithmetic theorem, formal verification, independent class-group proof,
-or claim of an externally reviewed release. The final release audit is step 8.
+or claim of an externally reviewed release. The [release audit](v0.5.md) records the separate independent checks.
 
 ## Mathematical and lower-level interfaces
 

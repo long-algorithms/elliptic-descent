@@ -6,11 +6,11 @@ marked 4-coverings, the projection, the kernel injection and exact global
 covering-equivalence witnesses. Here B is the verified pairing on the **same
 chosen basis** of S; it is computed when omitted.
 
-The package remains **0.4.0**. This step assembles the set of classes and the
+This component is included in [v0.5.0](v0.5.md). This step assembles the set of classes and the
 maps in the exact sequence, not addition on the whole 4-Selmer group. A key
 `(image_coordinates, orbit_index)` is a presentation-dependent identifier,
 not an additive coordinate or an invariant-factor generator. Group arithmetic
-is the next step. Inputs remain rational elliptic curves with the explicit
+is provided by [the group layer](four-selmer-group.md). Inputs remain rational elliptic curves with the explicit
 markings furnished by the preceding steps.
 
 ## Why concatenating relative lists is wrong
@@ -279,7 +279,8 @@ python benchmarks/replay_fibres.py four-selmer-fibres.jsonl
 General minimization/reduction and faster group-law-based twisting are not added
 here; repeatedly descending all image classes can be expensive. No fixed timing
 or performance superiority is claimed. Group addition, invariant-factor generators
-and the fully integrated curve-level interface remain later steps. This is not
+and the integrated curve-level interface are provided by the
+[group layer](four-selmer-group.md) and [public API](public-api.md). This is not
 formal verification or an external mathematical review.
 
 ## References

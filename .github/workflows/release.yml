@@ -1,0 +1,33 @@
+name: Publish audited v0.5.0
+on:
+  workflow_run:
+    workflows: [Tests, Distribution audit, Four-Selmer group audit, Global fibre audit, Public API audit, Independent release validation, Two-Selmer arithmetic audit, Two-quadratic arithmetic audit, Relative arithmetic fixtures]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: publish-v0.5.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install .
+      - name: Audit exact-head artifacts and publish only after every gate passes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: python tools/publish_release.py --repository "$GITHUB_REPOSITORY" --revision "$RELEASE_SHA"

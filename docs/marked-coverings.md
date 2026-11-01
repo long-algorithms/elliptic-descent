@@ -1,6 +1,6 @@
 # Marked curves and coverings — v0.5 development step 1
 
-The package remains **0.4.0**. These interfaces preserve the user's elliptic
+This component is included in [v0.5.0](v0.5.md). These interfaces preserve the user's elliptic
 curve and exact covering maps while using the existing relative-descent engine.
 They do not compute a labelled 2-Selmer group, a pairing matrix, or a full
 4-Selmer group. See [the eight-step plan](v0.5-plan.md).
@@ -154,7 +154,7 @@ independent 4-descent implementation.
 exact verification. Its scope is interface arithmetic, not full Selmer descent.
 Optional Sage checks test normalization and point images. All older release
 benchmarks remain in CI, and distribution tests ensure new modules ship in
-both wheel and sdist. The package version is not bumped to 0.5 by this step.
+both wheel and sdist. Release-wide acceptance is recorded in [v0.5.0](v0.5.md).
 
 ## Primary references
 
