@@ -2,6 +2,13 @@
 
 ## Unreleased — v0.5 development
 
+- Propose exact group operations on assembled 4-Selmer classes via geometric
+  Galois cocycles and all E[4] coboundaries, not cardinality-only assignment.
+- Retain actual covering generators, invariant factors, relations and coordinates;
+  check projection, kernel inclusion and doubling on every class.
+- Add portable normal-field/covering evidence and all-curve Sage acceptance gates.
+  These proposed changes require final-head Sage/CI verification before acceptance.
+
 - Assemble global 4-Selmer fibres by verified rational 2-torsion actions on relative coverings.
 - Retain explicit equivalence matrices, projection, and the actual kernel injection from labelled Selmer-2 classes.
 - Check torsion stabilizers, including rational 4-torsion, and preserve partial/conditional status.

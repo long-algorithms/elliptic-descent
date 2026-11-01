@@ -323,6 +323,16 @@ class FourSelmerFibres:
     def zero_class(self):
         return self.kernel_map.apply(0)
 
+    def group(self, *, backend='auto', max_field_degree=None, evidence=None):
+        """Exact operations on these actual classes, not an abstract count fit.
+
+        General addition uses checked geometric Galois cocycles; uniquely forced
+        small/kernel/projection cases reuse the already verified exact maps.
+        """
+        from .four_selmer_group import four_selmer_group
+        return four_selmer_group(self, backend=backend, max_field_degree=max_field_degree,
+                                 evidence=evidence)
+
     def verify_evidence(self, *, max_nodes=1_000_000):
         return (self.complete and self.selmer.verify_evidence(max_nodes=max_nodes)
                 and self.pairing.verify_evidence() and self.torsion.verify(self.selmer)

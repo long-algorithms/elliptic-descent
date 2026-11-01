@@ -38,7 +38,7 @@ jobs:
       matrix:
         include:
           - group: core
-            pytest_args: --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py --ignore=tests/test_sage_four_selmer_fibres.py
+            pytest_args: --ignore=tests/test_sage_four_selmer_group.py --ignore=tests/test_sage_cassels_tate.py --ignore=tests/test_sage_pairing_radical.py --ignore=tests/test_sage_four_selmer_fibres.py
           - group: pairing
             pytest_args: tests/test_sage_cassels_tate.py
           - group: radical
@@ -49,6 +49,24 @@ jobs:
             pytest_args: tests/test_sage_four_selmer_fibres.py -k "not explicit_global_fibres and not zero_fibre_transport"
           - group: fibres-reference
             pytest_args: tests/test_sage_four_selmer_fibres.py -k "zero_fibre_transport"
+          - group: group-curve-0
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_0"
+          - group: group-curve-1
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_1"
+          - group: group-curve-2
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_2"
+          - group: group-curve-3
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_3"
+          - group: group-curve-4
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_4"
+          - group: group-curve-5
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_5"
+          - group: group-curve-6
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_6"
+          - group: group-curve-7
+            pytest_args: tests/test_sage_four_selmer_group.py -k "group_case_7"
+          - group: group-behaviour
+            pytest_args: tests/test_sage_four_selmer_group.py -k "not complete_group_on_the_actual_covering_classes"
     container:
       image: sagemath/sagemath:10.6@sha256:60dfb09e8d1399e127a0d7b62b45eef1044574bae397df51bb6ba38df5498879
       options: --user root

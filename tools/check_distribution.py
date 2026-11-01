@@ -40,7 +40,7 @@ def check_distributions(root, directory):
         members = {m.name: m for m in archive.getmembers() if m.isfile()}
         prefix = next(iter(members)).split('/')[0]
         required = [root/p for p in ('LICENSE','README.md','CHANGELOG.md','pyproject.toml','MANIFEST.in')]
-        for folder, extension in [('src','*.py'),('tests','*.py'),('benchmarks','*.py'),('tools','*.py'),('docs','*.md')]:
+        for folder, extension in [('src','*.py'),('tests','*.py'),('tests','*.json'),('benchmarks','*.py'),('tools','*.py'),('docs','*.md')]:
             required.extend((root/folder).rglob(extension))
         for path in required:
             name = prefix+'/'+path.relative_to(root).as_posix()
